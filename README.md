@@ -47,4 +47,4 @@ Please ensure code is properly tested.
 ```
 4. Run `make build` to build the containers.
 5. Run `make up` to start the containers.
-6. Run `make test` to execute unit/integration tests.
+6. Run `make test` to execute unit/integration tests..
