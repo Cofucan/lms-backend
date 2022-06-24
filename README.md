@@ -32,7 +32,7 @@ Please ensure code is properly tested.
 
 `git checkout -b <name-of-feature>`
 
-(Tip: the name of your branch should be closely related to the feature being worked on and make sure to always create new feature branch from the dev branch and not master)
+(Tip: the name of your branch should be closely related to the feature being worked on and make sure to always create new feature branch from the dev branch and not master. Ensure your local dev branch is up to date with upstream remote dev branch before creating new branch.)
 
 5. Set up your development environment (Tip: see ##Getting Started guide below)
 
