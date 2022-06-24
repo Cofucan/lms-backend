@@ -30,8 +30,9 @@ Please ensure code is properly tested.
 `git remote add upstream https://github.com/kodecampteam/project-lms-backend`
 4. Create your Feature Branch using 
 
-`git checkout -b <name-of-feature>` 
-(Tip: the name of your branch should be closely related to the feature being worked on)
+`git checkout -b <name-of-feature>`
+
+(Tip: the name of your branch should be closely related to the feature being worked on and make sure to always create new feature branch from the dev branch and not master)
 
 5. Set up your development environment (Tip: see ##Getting Started guide below)
 
