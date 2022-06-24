@@ -21,14 +21,31 @@ The list of all the major technologies used in the project.
 Please ensure code is properly tested.
 
 1. Fork the Project repo
-2. Clone the repo to your local machine using `git clone https://github.com/<your-account-name>/project-lms-backend`
-3. Set your Upstream Remote using `git remote add upstream https://github.com/kodecampteam/project-lms-backend`
-4. Create your Feature Branch using `git checkout -b <name-of-feature>` (Tip: the name of your branch should be closely related to the feature being worked on)
+
+2. Clone the repo to your local machine using 
+
+`git clone https://github.com/<your-account-name>/project-lms-backend`
+3. Set your Upstream Remote using 
+
+`git remote add upstream https://github.com/kodecampteam/project-lms-backend`
+4. Create your Feature Branch using 
+
+`git checkout -b <name-of-feature>` 
+(Tip: the name of your branch should be closely related to the feature being worked on)
+
 5. Set up your development environment (Tip: see ##Getting Started guide below)
+
 6. Make and commit your changes (Use a concise descriptive commit message)
-7. Pull latest updates from Upstream branch using `git pull upstream dev`
+
+7. Pull latest updates from Upstream branch using 
+
+`git pull upstream dev`
 8. If conflicts are encountered after pulling changes, please resolve them locally first before committing
-9. Push your Feature Branch to origin using `git push origin <name-of-your-feature-branch>`
+
+9. Push your Feature Branch to origin using 
+
+`git push origin <name-of-your-feature-branch>`
+
 10. Go to Github, open a Pull Request to the dev branch and request a review by tagging team members 
 
 
