@@ -18,40 +18,73 @@ The list of all the major technologies used in the project.
 <!-- CONTRIBUTING -->
 ## Contribution Guide
 
-Please ensure code is properly tested.
+Please ensure your codes and changes are properly tested.
 
-1. Fork the Project repo
 
-2. Clone the repo to your local machine using 
+### Fork the Project Repo
+
+Fork this repository to get a personal copy on your github account
+
+
+### Clone the Repo to your local machine using
+
+To clone the forked repository to your local machine, open command prompt and run:
 
 `git clone https://github.com/<your-account-name>/project-lms-backend`
-3. Set your Upstream Remote using 
+
+
+### Set Upstream Remote
+
+Set your upstream remote so you can pull changes from upstream to update your repo by running:
 
 `git remote add upstream https://github.com/kodecampteam/project-lms-backend`
-4. Create your Feature Branch using 
+
+
+### Creating Feature Branch
+
+First checkout to the dev branch by running:
+
+`git checkout dev`
+
+Then create the feature branch by running:
 
 `git checkout -b <name-of-feature>`
 
-(Tip: the name of your branch should be closely related to the feature being worked on and make sure to always create new feature branch from the dev branch and not master. Ensure your local dev branch is up to date with upstream remote dev branch before creating new branch.)
+NB: the name of your branch should be closely related to the feature being worked on and make sure to always create new feature branch from the dev branch and not master. Ensure your local dev branch is up to date with upstream remote dev branch before creating new branch.
 
-5. Set up your development environment (Tip: see ##Getting Started guide below)
 
-6. Make and commit your changes (Use a concise descriptive commit message)
+### Set up Development Environment 
 
-7. Pull latest updates from Upstream branch using 
+Tip: see Getting Started guide below
+
+
+### Making Changes
+
+Make all your changes on your feature branch, add and commit your changes using a concise descriptive commit message
+
+
+### Pulling Updates from Remote
+
+Pull latest updates from Upstream branch by running:
 
 `git pull upstream dev`
-8. If conflicts are encountered after pulling changes, please resolve them locally first before committing
 
-9. Push your Feature Branch to origin using 
+NB: If conflicts are encountered after pulling changes, please resolve them locally first before committing
+
+
+### Pushing Changes
+
+Publish your Feature Branch and changes to origin by running:
 
 `git push origin <name-of-your-feature-branch>`
 
-10. Go to Github, open a Pull Request to the dev branch and request a review by tagging team members 
+
+### Pull Request
+
+Go to Github, open a Pull Request to the Upstream Remote dev branch and request a review by tagging team members 
 
 
 NB: Add a proper description of the changes made when making a Pull Request for easy review. Goodluck!!!
-
 
 
 ## Getting Started
