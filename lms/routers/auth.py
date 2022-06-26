@@ -1,5 +1,5 @@
 from http.client import HTTPException
-from fastapi import APIRouter,HTTPException, status
+from fastapi import APIRouter,HTTPException, status, Response
 from models.user import User
 from passlib.context import CryptContext
 
@@ -31,7 +31,7 @@ async def Login(data: LoginSchema):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Password Incorrect"
         )
-    return  HTTPException(
-        status_code=status.HTTP_200_OK,
-        detail="Login Successful"
-    )
+    return Response(
+        status.HTTP_200_OK,
+        detail ="Login Successful"
+     )
