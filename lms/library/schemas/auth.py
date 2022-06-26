@@ -18,3 +18,5 @@ class JWTSchema(BaseModel):
 class AuthResponse(BaseModel):
     user: UserPublic
     token: str
+
+

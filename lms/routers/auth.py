@@ -2,8 +2,12 @@ from http.client import HTTPException
 from fastapi import APIRouter,HTTPException, status, Response
 from models.user import User
 from passlib.context import CryptContext
+from datetime import datetime, timedelta, timezone
+from config import SECRET_KEY, ALGORITHM
+from jose import jwt
 
-from lms.library.schemas.auth import LoginSchema
+
+from lms.library.schemas.auth import LoginSchema,JWTSchema, AuthResponse
 
 router = APIRouter(prefix="/auth")
 pwd_context = CryptContext(schemes=['bcrypt'])
@@ -32,6 +36,7 @@ async def Login(data: LoginSchema):
             detail="Password Incorrect"
         )
     return Response(
-        status.HTTP_200_OK,
-        detail ="Login Successful"
-     )
+        status_code=status.HTTP_200_OK, 
+        detail="Login Successful"
+        )
+    
