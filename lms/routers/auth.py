@@ -1,12 +1,17 @@
+from datetime import datetime, timedelta, timezone
 import email
+from this import s
 from uuid import UUID
 from fastapi import APIRouter, status, Response, Path, HTTPException
 from library.schemas.register import UserPublic, EmailVerify
+from config import ALGORITHM, SECRET_KEY
+from library.schemas.auth import JWTSchema, LoginSchema
 from models.user import User
 from library.schemas.register import UserCreate
 from passlib.context import CryptContext
 from library.security.otp import otp_manager
 from library.schemas.auth import AuthResponse
+from jose import jwt
 
 
 router = APIRouter(prefix="/auth")
@@ -59,3 +64,38 @@ async def email_verification(otp: str = Path(...)):
     user = await User.get(id=UUID(user_id))
     return user
     
+
+
+
+@router.post("/login/", response_model=AuthResponse)
+async def user_login(data: LoginSchema):
+    get_user_by_email = await User.get_or_none(email=data.username_or_email)
+    if get_user_by_email is None:
+        get_user_by_username = await User.get_or_none(username=data.username_or_email)
+        if get_user_by_username is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid login credentials"
+            )
+    password = data.password
+    hashed_passsword = get_user_by_email.hashed_password
+    verify_password: bool = pwd_context.verify(password, hashed_passsword)
+    if verify_password is False:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Incorrect password"
+        )
+    
+
+    jwt_data = JWTSchema(user_id=str(get_user_by_email.id))
+    expire= (datetime.now(timezone.utc) + timedelta(days=0, minutes=15))
+    jwt_data_encoded = jwt_data.dict()
+    jwt_data_encoded.update({"expire": str(expire)})
+
+
+
+    jwt_encode = jwt.encode(jwt_data_encoded, SECRET_KEY, algorithm=ALGORITHM)
+    return AuthResponse(
+        user = get_user_by_email,
+        token=jwt_encode
+    )
