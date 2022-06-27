@@ -6,7 +6,11 @@ from models.user import User
 from library.schemas.register import UserCreate
 from passlib.context import CryptContext
 from library.security.otp import otp_manager
-from library.schemas.auth import AuthResponse
+from library.schemas.auth import AuthResponse, LoginSchema, JWTSchema
+from datetime import datetime, timedelta, timezone
+from config import SECRET_KEY, ALGORITHM
+from jose import jwt
+from fastapi.responses import JSONResponse
 
 
 router = APIRouter(prefix="/auth")
@@ -61,7 +65,7 @@ async def email_verification(otp: str = Path(...)):
     
 
 """Login to account"""
-@router.post("/Login/", response_model=str)
+@router.post("/login/", response_model=str)
 async def Login(data: LoginSchema):
     """handle user Login"""
     user = await User.get_or_none(email=data.username_or_email)
@@ -84,7 +88,4 @@ async def Login(data: LoginSchema):
             detail="Password Incorrect"
         )
     else:
-        return Response(
-        status_code=status.HTTP_200_OK, 
-        detail="Login Successful"
-        )
+        return JSONResponse(status_code=200, content={"message": "Login Successful"})
