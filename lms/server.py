@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from library.database.database import create_start_app_handler
+from routers.auth import router
 
 
 def get_application():
@@ -10,7 +11,7 @@ def get_application():
 
     # Connect to database.
     app.add_event_handler("startup", create_start_app_handler(app))
-
+    app.include_router(router)
     return app
 
 
