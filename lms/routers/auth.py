@@ -35,8 +35,8 @@ async def Login(data: LoginSchema):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Password Incorrect"
         )
-    return Response(
+    else:
+        return Response(
         status_code=status.HTTP_200_OK, 
         detail="Login Successful"
         )
-    
