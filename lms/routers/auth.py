@@ -14,7 +14,7 @@ pwd_context = CryptContext(schemes=['bcrypt'],deprecated="auto")
 
 
 
-@router.post("/register/", response_model=UserPublic)
+@router.post("/register/", response_model=UserPublic, name='auth:register', status_code=status.HTTP_201_CREATED)
 async def register(data: UserCreate):
 
     email_exist = await User.get_or_none(email=data.email)
