@@ -96,7 +96,7 @@ async def Login(data: LoginSchema):
 
     """encode jwt token(call encode function from jose)"""
 
-    expire = expire=str(datetime.now(timezone.utc)+ timedelta(minutes=10))
+    expire = expire=str(datetime.now(timezone.utc)+ timedelta(minutes=21600))
     to_encode.update({'expire':str(expire)})
 
     encoded_jwt = jwt.encode(to_encode , SECRET_KEY, algorithm=ALGORITHM)
@@ -107,4 +107,15 @@ async def Login(data: LoginSchema):
     
 
 
+# @router.post("/forgot_password", response_model=ForgotPassword)
+# async def forgot_password(request: schema.ForgotPassword):
+#    #check if user exists
+#       user = await User.get_or_none(request.email)
+#     if user is None:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#          detail="Incorrect username or email"
+#          )
 
+
+#     return "Forgot Password"
