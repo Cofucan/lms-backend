@@ -10,7 +10,6 @@ from library.schemas.auth import AuthResponse, LoginSchema, JWTSchema
 from datetime import datetime, timedelta, timezone
 from config import SECRET_KEY, ALGORITHM
 from jose import jwt
-from fastapi.responses import JSONResponse
 
 
 router = APIRouter(prefix="/auth")
@@ -65,7 +64,7 @@ async def email_verification(otp: str = Path(...)):
     
 
 """Login to account"""
-@router.post("/login/", response_model=str)
+@router.post("/login/", response_model=AuthResponse)
 async def Login(data: LoginSchema):
     """handle user Login"""
     user = await User.get_or_none(email=data.username_or_email)
@@ -87,5 +86,25 @@ async def Login(data: LoginSchema):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Password Incorrect"
         )
-    else:
-        return JSONResponse(status_code=200, content={"message": "Login Successful"})
+
+    """Generate the JWT token"""
+    jwt_data = JWTSchema(
+        user_id=str(user.id)
+    )
+    
+    to_encode = jwt_data.dict()
+
+    """encode jwt token(call encode function from jose)"""
+
+    expire = expire=str(datetime.now(timezone.utc)+ timedelta(minutes=10))
+    to_encode.update({'expire':str(expire)})
+
+    encoded_jwt = jwt.encode(to_encode , SECRET_KEY, algorithm=ALGORITHM)
+    return AuthResponse(
+        user=user,
+        token=encoded_jwt
+    ) 
+    
+
+
+
