@@ -6,7 +6,7 @@ from models.user import User
 from library.schemas.register import UserCreate
 from passlib.context import CryptContext
 from library.security.otp import otp_manager
-from library.schemas.auth import AuthResponse, LoginSchema, JWTSchema
+from library.schemas.auth import AuthResponse, LoginSchema, JWTSchema,ForgotPassword
 from datetime import datetime, timedelta, timezone
 from config import SECRET_KEY, ALGORITHM
 from jose import jwt
@@ -96,7 +96,7 @@ async def Login(data: LoginSchema):
 
     """encode jwt token(call encode function from jose)"""
 
-    expire = expire=str(datetime.now(timezone.utc)+ timedelta(minutes=21600))
+    expire = expire=str(datetime.now(timezone.utc)+ timedelta(minutes=43200))
     to_encode.update({'expire':str(expire)})
 
     encoded_jwt = jwt.encode(to_encode , SECRET_KEY, algorithm=ALGORITHM)
@@ -107,15 +107,15 @@ async def Login(data: LoginSchema):
     
 
 
-# @router.post("/forgot_password", response_model=ForgotPassword)
-# async def forgot_password(request: schema.ForgotPassword):
-#    #check if user exists
-#       user = await User.get_or_none(request.email)
-#     if user is None:
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#          detail="Incorrect username or email"
-#          )
+@router.post("/forgot_password/", response_model=ForgotPassword)
+async def forgot_password(request:ForgotPassword):
+   #check if user exists
+    user = await User.get_or_none(request.email)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+         detail="Invalid email"
+         )
 
 
-#     return "Forgot Password"
+    return "Forgot Password"
