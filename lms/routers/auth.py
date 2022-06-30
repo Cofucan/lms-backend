@@ -10,7 +10,8 @@ from library.schemas.auth import (
     AuthResponse,
     LoginSchema,
     JWTSchema,
-    ForgotPassword
+    ForgotPassword,
+    ResetPassword
 )
 from datetime import datetime, timedelta, timezone
 from config import SECRET_KEY, ALGORITHM
@@ -121,22 +122,59 @@ async def Login(data: LoginSchema):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return AuthResponse(user=user, token=encoded_jwt)
 
-    @app.post("/forgot-password/", response_model=AuthResponse)
-    async def forgotPassword(data: ForgotPassword):
-        """Verify email and retrieve user details"""
-        user = await User.get_or_none(email=data.email)
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No user account found"
-            )
-        """Generate the JWT token for valid user"""    
-        jwt_data = JWTSchema(user_id=str(user.id))    
 
-        to_encode = jwt_data.dict()
-        expire = datetime.now(timezone.utc) + timedelta(minutes=43200)
-        to_encode.update({"expire": str(expire)})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-        return AuthResponse(user=user, token=encoded_jwt)
 
-   
+@router.post("/forgot-password/", response_model=AuthResponse)
+async def forgot_password(data: ForgotPassword):
+    """Verify email and retrieve user details"""
+    user = await User.get_or_none(email=data.email)
+    print(user)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User account not found"
+        )
+
+    """Generate the JWT token for valid user"""    
+    jwt_data = JWTSchema(user_id=str(user.id))    
+
+    to_encode = jwt_data.dict()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=43200)
+    to_encode.update({"expire": str(expire)})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return AuthResponse(user=user, token=encoded_jwt)
+
+
+
+
+@router.put("/reset-password/{token}", response_model=AuthResponse)
+async def reset_password(data: ResetPassword, token: str = Path(...)):
+    """Decode token to get user"""            
+    decoded_data = jwt.decode(
+        token, str(SECRET_KEY), algorithms=[ALGORITHM]
+    )
+    user_id = decoded_data['user_id']
+    
+    """Reset user password"""
+    password = data.password
+    if (
+        len(password) < 8
+        or password.lower() == password
+        or password.upper() == password
+        or password.isalnum()
+        or not any(i.isdigit() for i in password)
+    ):
+        raise HTTPException(
+            detail={
+                "password": "Your Password Is Weak",
+                "Hint": "Min. 8 characters, 1 Uppercase, 1 lowercase, 1 number, and 1 special character",
+            },
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    hashed_password = pwd_context.hash(password)
+    await User.get(id=UUID(user_id)).update(
+    hashed_password=hashed_password
+    )
+
+    updated_user =  await User.get(id=UUID(user_id))          
+    return AuthResponse(user=updated_user, token=token)    
