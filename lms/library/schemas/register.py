@@ -3,7 +3,6 @@ from pydantic import BaseModel, EmailStr, Field
 from uuid import UUID, uuid4
 
 
-
 class UserCreate(BaseModel):
     first_name: str = Field(..., max_length=150)
     surname: str = Field(..., max_length=150)
@@ -16,7 +15,11 @@ class UserPublic(BaseModel):
     first_name: str = Field(..., max_length=50)
     surname: str = Field(..., max_length=50)
     email: EmailStr
-       
+
 
 class EmailVerify(BaseModel):
     email_verified: bool
+
+
+class ForgotPassword(BaseModel):
+    email: str

@@ -18,3 +18,7 @@ class JWTSchema(BaseModel):
 class AuthResponse(BaseModel):
     user: UserPublic
     token: str
+
+
+class ForgotPassword(BaseModel):
+    email: str
