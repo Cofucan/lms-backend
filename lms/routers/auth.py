@@ -175,6 +175,5 @@ async def reset_password(data: ResetPassword, token: str = Path(...)):
     await User.get(id=UUID(user_id)).update(
     hashed_password=hashed_password
     )
-
     updated_user =  await User.get(id=UUID(user_id))          
     return AuthResponse(user=updated_user, token=token)    
