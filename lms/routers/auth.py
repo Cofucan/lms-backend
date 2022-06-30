@@ -43,6 +43,7 @@ async def register(data: UserCreate):
     otp = otp_manager.create_otp(user_id=str(created_user.id))
     # You will only get the OTP in your terminal for now. 
     print(otp)
+    
     return created_user
 
 
@@ -69,6 +70,7 @@ async def email_verification(otp: str = Path(...)):
 
 @router.post("/login/", response_model=AuthResponse)
 async def user_login(data: LoginSchema):
+    "User Login with either Email or Username"
     get_user_by_email = await User.get_or_none(email=data.username_or_email)
     if get_user_by_email is None:
         get_user_by_username = await User.get_or_none(username=data.username_or_email)
@@ -79,20 +81,25 @@ async def user_login(data: LoginSchema):
             )
     password = data.password
     hashed_passsword = get_user_by_email.hashed_password
+    # Verify user password against the user's hashed password during registration
+
     verify_password: bool = pwd_context.verify(password, hashed_passsword)
     if verify_password is False:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail= "Incorrect password"
         )
-    
-
+    # Verify if User's email is already verified
+    if get_user_by_email.email_verified is False:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User's email not verified, kindly verify your email"
+        )
+        # Create JWT Token
     jwt_data = JWTSchema(user_id=str(get_user_by_email.id))
     expire= (datetime.now(timezone.utc) + timedelta(days=0, minutes=15))
     jwt_data_encoded = jwt_data.dict()
     jwt_data_encoded.update({"expire": str(expire)})
-
-
 
     jwt_encode = jwt.encode(jwt_data_encoded, SECRET_KEY, algorithm=ALGORITHM)
     return AuthResponse(
