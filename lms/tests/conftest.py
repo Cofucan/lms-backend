@@ -9,7 +9,6 @@ from asgi_lifespan import LifespanManager
 from datetime import datetime, timezone, timedelta
 from tortoise.contrib.fastapi import register_tortoise
 
-
 from models.user import User
 from server import get_application
 from library.schemas.auth import JWTSchema
@@ -78,17 +77,17 @@ async def test_user():
     user_password = "@123Qwerty"
     hashed_password = pwd_context.hash(user_password)
 
-    username = "username"
+    surname = "surname"
     email = "test@email.com"
 
     email_exists = await User.filter(email=email).exists()
-    username_exists = await User.filter(username=username).exists()
+    username_exists = await User.filter(username=surname).exists()
 
     if email_exists or username_exists:
         return await User.get(email=email)
     else:
         return await User.create(
-            username="username",
+            username="surname",
             email="test@email.com",
             first_name="Test",
             email_verified=True,
