@@ -10,6 +10,7 @@ from library.schemas.auth import (
     AuthResponse,
     LoginSchema,
     JWTSchema,
+    ForgotPassword
 )
 from datetime import datetime, timedelta, timezone
 from config import SECRET_KEY, ALGORITHM
@@ -119,3 +120,23 @@ async def Login(data: LoginSchema):
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return AuthResponse(user=user, token=encoded_jwt)
+
+    @app.post("/forgot-password/", response_model=AuthResponse)
+    async def forgotPassword(data: ForgotPassword):
+        """Verify email and retrieve user details"""
+        user = await User.get_or_none(email=data.email)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No user account found"
+            )
+        """Generate the JWT token for valid user"""    
+        jwt_data = JWTSchema(user_id=str(user.id))    
+
+        to_encode = jwt_data.dict()
+        expire = datetime.now(timezone.utc) + timedelta(minutes=43200)
+        to_encode.update({"expire": str(expire)})
+        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        return AuthResponse(user=user, token=encoded_jwt)
+
+   
