@@ -9,6 +9,7 @@ from asgi_lifespan import LifespanManager
 from datetime import datetime, timezone, timedelta
 from tortoise.contrib.fastapi import register_tortoise
 
+
 from models.user import User
 from server import get_application
 from library.schemas.auth import JWTSchema
