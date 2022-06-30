@@ -22,4 +22,7 @@ class EmailVerify(BaseModel):
 
 
 class ForgotPassword(BaseModel):
-    email: str
+    email: EmailStr
+
+class ResetPassword(BaseModel):
+    password: str = Field(..., max_length=40, min_length=8)    
