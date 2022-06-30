@@ -23,5 +23,6 @@ class AuthResponse(BaseModel):
 class ForgotPassword(BaseModel):
     email: EmailStr
 
+
 class ResetPassword(BaseModel):
     password: str = Field(..., max_length=40, min_length=8)
