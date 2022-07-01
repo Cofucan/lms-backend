@@ -1,10 +1,9 @@
-import json
 import redis
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 from passlib.context import CryptContext
-from library.security.otp import otp_manager
+
 from models.user import User
 
 
@@ -13,6 +12,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class TestRegister:
+
     async def test_register(self, app: FastAPI, client: AsyncClient) -> None:
         request_data = {
             "first_name": "Hello",
@@ -41,7 +41,9 @@ class TestRegister:
         keys = db.keys()
 
         assert len(keys) == 1
-        
+
+
+
 class TestLogin:
     async def test_login(
         self, app: FastAPI, client: AsyncClient, test_user
@@ -73,4 +75,4 @@ class TestLogin:
     #     assert (
     #         response.json().get("detail")
     #         == "Your authentication credentials is incorrect."
-    #     )        
+    #     )
