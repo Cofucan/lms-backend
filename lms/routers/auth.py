@@ -145,16 +145,30 @@ async def forgot_password(data: ForgotPassword):
 
 
 
-
-@router.put("/reset-password/{token}", response_model=AuthResponse)
+@router.put("/reset-password/{token}", response_model=UserPublic)
 async def reset_password(data: ResetPassword, token: str = Path(...)):
-    """Decode token to get user"""            
-    decoded_data = jwt.decode(
-        token, str(SECRET_KEY), algorithms=[ALGORITHM]
-    )
-    user_id = decoded_data['user_id']
+    """Decode token to get user"""    
+    try:        
+        decoded_data = jwt.decode(
+            token, str(SECRET_KEY), algorithms=[ALGORITHM]
+        )
+        user_id = decoded_data['user_id']
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="User detail could not be processed."
+        )    
+     
+    """Confirm and get user with decoded user_id"""
+    user = await User.get_or_none(id=UUID(user_id))
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User account not found"
+        )
     
-    """Reset user password"""
+    """Reset user password for valid user"""
     password = data.password
     if (
         len(password) < 8
@@ -175,4 +189,4 @@ async def reset_password(data: ResetPassword, token: str = Path(...)):
     hashed_password=hashed_password
     )
     updated_user =  await User.get(id=UUID(user_id))          
-    return AuthResponse(user=updated_user, token=token)    
+    return updated_user   
