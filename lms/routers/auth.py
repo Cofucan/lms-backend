@@ -127,8 +127,7 @@ async def Login(data: LoginSchema):
 @router.post("/forgot-password/", response_model=AuthResponse)
 async def forgot_password(data: ForgotPassword):
     """Verify email and retrieve user details"""
-    user = await User.get_or_none(email=data.email)
-    print(user)
+    user = await User.get_or_none(email=data.email)   
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -139,7 +138,7 @@ async def forgot_password(data: ForgotPassword):
     jwt_data = JWTSchema(user_id=str(user.id))    
 
     to_encode = jwt_data.dict()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=43200)
+    expire = datetime.now(timezone.utc) + timedelta(seconds=600)
     to_encode.update({"expire": str(expire)})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return AuthResponse(user=user, token=encoded_jwt)
