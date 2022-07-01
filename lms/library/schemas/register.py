@@ -19,4 +19,3 @@ class UserPublic(BaseModel):
 
 class EmailVerify(BaseModel):
     email_verified: bool
-  
