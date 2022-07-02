@@ -19,7 +19,3 @@ class UserPublic(BaseModel):
 
 class EmailVerify(BaseModel):
     email_verified: bool
-
-
-class ForgotPassword(BaseModel):
-    email: str
