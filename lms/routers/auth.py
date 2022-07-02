@@ -1,7 +1,11 @@
+from datetime import datetime, timedelta, timezone
 import email
+from this import s
 from uuid import UUID
 from fastapi import APIRouter, status,Path, HTTPException
 from library.schemas.register import UserPublic, EmailVerify
+from config import ALGORITHM, SECRET_KEY
+from library.schemas.auth import JWTSchema, LoginSchema
 from models.user import User
 from library.schemas.register import UserCreate
 from passlib.context import CryptContext
