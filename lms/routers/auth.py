@@ -1,20 +1,22 @@
 import email
 from uuid import UUID
 from fastapi import APIRouter, status,Path, HTTPException
-from library.schemas.register import UserPublic, EmailVerify
-from models.user import User
-from library.schemas.register import UserCreate
 from passlib.context import CryptContext
+
+from models.user import User
+from library.dependencies.to_lowerCase import to_lower_case
+from library.schemas.register import UserCreate
+from library.schemas.register import UserPublic, EmailVerify
 from library.security.otp import otp_manager
 from library.schemas.auth import (
     AuthResponse,
     LoginSchema,
     JWTSchema,
 )
+
 from datetime import datetime, timedelta, timezone
 from config import SECRET_KEY, ALGORITHM
 from jose import jwt
-
 
 router = APIRouter(prefix="/auth")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -23,18 +25,19 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 @router.post("/register/", response_model=UserPublic, name='auth:register', status_code=status.HTTP_201_CREATED)
 async def register(data: UserCreate):
 
-    email_exist = await User.get_or_none(email=data.email)
+    converted_email = to_lower_case(data.email)
+
+    email_exist = await User.exists(email=converted_email)
     if email_exist:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exist",
         )
+        
     password = data.password
     # password strength check. Throws an error if password doesn't contain
     # uppercase, lowercase, digit and a special character
-    if (
-        len(password) < 8
-        or password.lower() == password
+    if (password.lower() == password
         or password.upper() == password
         or password.isalnum()
         or not any(i.isdigit() for i in password)
@@ -48,12 +51,15 @@ async def register(data: UserCreate):
         )
     hashed_password = pwd_context.hash(password)
     created_user = await User.create(
-        **data.dict(exclude_unset=True, exclude={"password"}),
+        **data.dict(exclude_unset=True, exclude={"email", "password"}),
+        email=converted_email,
         hashed_password=hashed_password
     )
+
+    # Printing the otp on the terminal.
     otp = otp_manager.create_otp(user_id=str(created_user.id))
-    # You will only get the OTP in your terminal for now.
     print(otp)
+
     return created_user
 
 
