@@ -99,7 +99,7 @@ async def Login(data: LoginSchema):
     is_password_valid: bool = pwd_context.verify(
         data.password, hashed_password
     )
-    if is_password_valid is False:
+    if not is_password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Password Incorrect",
@@ -115,7 +115,7 @@ async def Login(data: LoginSchema):
     expire = expire = str(
         datetime.now(timezone.utc) + timedelta(minutes=43200)
     )
-    to_encode.update({"expire": str(expire)})
+    to_encode.update({"expire": expire})
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return AuthResponse(user=user, token=encoded_jwt)
