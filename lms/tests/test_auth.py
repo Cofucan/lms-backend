@@ -12,6 +12,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class TestRegister:
+    
     async def test_register(self, app: FastAPI, client: AsyncClient) -> None:
 
         # Test successful registration with valid user data
