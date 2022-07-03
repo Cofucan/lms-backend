@@ -66,11 +66,13 @@ class TestRegister:
             app.url_path_for("auth:register"), json=self.request_data
         )
         assert response.status_code == 400
-        # assert (
-        #         response.json().get("detail")
-        #     ==  "password": "Your Password Is Weak",
-        #         "Hint": "Min. 8 characters, 1 Uppercase, 1 lowercase, 1 number, and 1 special character",
-        # )
+        assert (
+                response.json().get("detail")
+            ==  {
+                "password": "Your Password Is Weak",
+                "Hint": "Min. 8 characters, 1 Uppercase, 1 lowercase, 1 number, and 1 special character",
+            },
+        )
 
     # Test for weak password: no lowercase character
     async def test_register_password_no_lower(self, app: FastAPI, client: AsyncClient) -> None:
@@ -90,7 +92,13 @@ class TestRegister:
             app.url_path_for("auth:register"), json=self.request_data
         )
         assert response.status_code == 400
-
+        assert (
+                response.json().get("detail")
+            ==  {
+                "password": "Your Password Is Weak",
+                "Hint": "Min. 8 characters, 1 Uppercase, 1 lowercase, 1 number, and 1 special character",
+            },
+        )
 
     # Test for email exists: case-sensitive
     async def test_register_user_exists_case_sensitive(self, app: FastAPI, client: AsyncClient) -> None:
@@ -107,6 +115,10 @@ class TestRegister:
             app.url_path_for("auth:register"), json=self.request_data
         )
         assert response.status_code == 400
+        assert (
+            response.json().get("detail")
+            == "User with this email already exist"
+        )
 
 
 # class TestLogin:
