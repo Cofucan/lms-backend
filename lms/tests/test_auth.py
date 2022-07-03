@@ -61,18 +61,18 @@ class TestLogin:
         assert "token" in res_data
         assert "user" in res_data
 
-    # async def test_login_fails_on_incorrect_cred(
-    #     self, app: FastAPI, client: AsyncClient, test_user
-    # ) -> None:
-    #     request_data = {
-    #         "username_or_email": test_user.email,
-    #         "password": "testingkjsdjrs456",
-    #     }
-    #     response = await client.post(
-    #         app.url_path_for("auth:login"), json=request_data
-    #     )
-    #     assert response.status_code == 401
-    #     assert (
-    #         response.json().get("detail")
-    #         == "Your authentication credentials is incorrect."
-    #     )
+    async def test_login_fails_on_incorrect_cred(
+        self, app: FastAPI, client: AsyncClient, test_user
+    ) -> None:
+        request_data = {
+            "username_or_email": test_user.email,
+            "password": "testingkjsdjrs456",
+        }
+        response = await client.post(
+            app.url_path_for("auth:login"), json=request_data
+        )
+        assert response.status_code == 401
+        assert (
+            response.json().get("detail")
+            == "Password Incorrect"
+        )
