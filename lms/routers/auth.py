@@ -1,11 +1,7 @@
-from datetime import datetime, timedelta, timezone
 import email
-from this import s
 from uuid import UUID
 from fastapi import APIRouter, status,Path, HTTPException
 from library.schemas.register import UserPublic, EmailVerify
-from config import ALGORITHM, SECRET_KEY
-from library.schemas.auth import JWTSchema, LoginSchema
 from models.user import User
 from library.schemas.register import UserCreate
 from passlib.context import CryptContext
@@ -73,7 +69,7 @@ async def register(data: UserCreate):
     return created_user
 
 
-@router.put("/verify-email/{otp}", response_model=EmailVerify)
+@router.put("/verify-email/{otp}", response_model=EmailVerify, name="auth:verify-email")
 async def email_verification(otp: str = Path(...)):
     user_id = otp_manager.get_otp_user(otp)
     if not user_id:

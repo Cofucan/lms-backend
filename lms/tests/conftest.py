@@ -80,13 +80,13 @@ async def test_user():
     email = "test@email.com"
 
     email_exists = await User.filter(email=email).exists()
-    username_exists = await User.filter(username=surname).exists()
+    username_exists = await User.filter(surname=surname).exists()
 
     if email_exists or username_exists:
         return await User.get(email=email)
     else:
         return await User.create(
-            username="surname",
+            surname="surname",
             email="test@email.com",
             first_name="Test",
             email_verified=True,
