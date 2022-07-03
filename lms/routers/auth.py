@@ -94,7 +94,6 @@ async def email_verification(otp: str = Path(...)):
 
 """Login to account"""
 
-
 @router.post("/login/", response_model=AuthResponse)
 async def Login(data: LoginSchema):
     """handle user Login"""
