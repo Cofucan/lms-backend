@@ -1,9 +1,10 @@
+import json
 import redis
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 from passlib.context import CryptContext
-
+from library.security.otp import otp_manager
 from models.user import User
 
 
@@ -122,7 +123,7 @@ class TestRegister:
 #     ) -> None:
 #         request_data = {
 #             "username_or_email": test_user.email,
-#             "password": "testing456",
+#             "password": "@123Qwerty",
 #         }
 #         response = await client.post(
 #             app.url_path_for("auth:login"), json=request_data

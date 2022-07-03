@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 from library.schemas.register import UserPublic
 
@@ -21,4 +21,8 @@ class AuthResponse(BaseModel):
 
 
 class ForgotPassword(BaseModel):
-    email: str
+    email: EmailStr
+
+
+class ResetPassword(BaseModel):
+    password: str = Field(..., max_length=40, min_length=8)

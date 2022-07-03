@@ -1,6 +1,13 @@
+from datetime import datetime, timedelta, timezone
 import email
+from this import s
 from uuid import UUID
 from fastapi import APIRouter, status,Path, HTTPException
+from library.schemas.register import UserPublic, EmailVerify
+from config import ALGORITHM, SECRET_KEY
+from library.schemas.auth import JWTSchema, LoginSchema
+from models.user import User
+from library.schemas.register import UserCreate
 from passlib.context import CryptContext
 
 from models.user import User
@@ -12,6 +19,8 @@ from library.schemas.auth import (
     AuthResponse,
     LoginSchema,
     JWTSchema,
+    ForgotPassword,
+    ResetPassword
 )
 
 from datetime import datetime, timedelta, timezone
@@ -125,3 +134,72 @@ async def Login(data: LoginSchema):
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return AuthResponse(user=user, token=encoded_jwt)
+
+
+
+@router.post("/forgot-password/", response_model=AuthResponse)
+async def forgot_password(data: ForgotPassword):
+    """Verify email and retrieve user details"""
+    user = await User.get_or_none(email=data.email)   
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User account not found"
+        )
+
+    """Generate the JWT token for valid user"""    
+    jwt_data = JWTSchema(user_id=str(user.id))    
+
+    to_encode = jwt_data.dict()
+    expire = datetime.now(timezone.utc) + timedelta(seconds=600)
+    to_encode.update({"expire": str(expire)})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return AuthResponse(user=user, token=encoded_jwt)
+
+
+
+@router.put("/reset-password/{token}", response_model=UserPublic)
+async def reset_password(data: ResetPassword, token: str = Path(...)):
+    """Decode token to get user"""    
+    try:        
+        decoded_data = jwt.decode(
+            token, str(SECRET_KEY), algorithms=[ALGORITHM]
+        )
+        user_id = decoded_data['user_id']
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="User detail could not be processed."
+        )    
+     
+    """Confirm and get user with decoded user_id"""
+    user = await User.get_or_none(id=UUID(user_id))
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User account not found"
+        )
+    
+    """Reset user password for valid user"""
+    password = data.password
+    if (
+        len(password) < 8
+        or password.lower() == password
+        or password.upper() == password
+        or password.isalnum()
+        or not any(i.isdigit() for i in password)
+    ):
+        raise HTTPException(
+            detail={
+                "password": "Your Password Is Weak",
+                "Hint": "Min. 8 characters, 1 Uppercase, 1 lowercase, 1 number, and 1 special character",
+            },
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+    hashed_password = pwd_context.hash(password)
+    await User.get(id=UUID(user_id)).update(
+    hashed_password=hashed_password
+    )
+    updated_user =  await User.get(id=UUID(user_id))          
+    return updated_user   
