@@ -21,8 +21,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 @pytest.fixture(scope="module")
 def app() -> FastAPI:
     """Get a reference to the application."""
-    app = get_application()
-    return app
+    return get_application()
 
 
 @pytest.fixture(scope="class")
