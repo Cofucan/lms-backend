@@ -48,34 +48,32 @@ class TestRegister:
 
     # Test for email already exists
     async def test_register_user_exists(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["first_name"] = "Bravo"
-        self.request_data["surname"] = "Test_second"
-        self.request_data["password"] = "AgxI=get/e357"
-
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )
         assert response.status_code == 400
+        assert (
+            response.json().get("detail")
+            == "User with this email already exist"
+        )
 
 
     # Test for weak password: no uppercase character
     async def test_register_password_no_upper(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["first_name"] = "Charlie"
-        self.request_data["surname"] = "Test_third"
-        self.request_data["email"] = "test_email_charlie@kodecamp.com"
         self.request_data["password"] = ":r~]7s*tvc7/9g}?"
 
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )
         assert response.status_code == 400
-
+        # assert (
+        #         response.json().get("detail")
+        #     ==  "password": "Your Password Is Weak",
+        #         "Hint": "Min. 8 characters, 1 Uppercase, 1 lowercase, 1 number, and 1 special character",
+        # )
 
     # Test for weak password: no lowercase character
     async def test_register_password_no_lower(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["first_name"] = "Delta"
-        self.request_data["surname"] = "Test_fouth"
-        self.request_data["email"] = "test_email_delta@kodecamp.com"
         self.request_data["password"] = "!J$5):^]ZK`=;${U"
 
         response = await client.post(
@@ -86,9 +84,6 @@ class TestRegister:
 
     # Test for weak password: no numeric character
     async def test_register_password_no_nummber(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["first_name"] = "Echo"
-        self.request_data["surname"] = "Test_fifth"
-        self.request_data["email"] = "test_email_echo@kodecamp.com"
         self.request_data["password"] = "UB.xd:HRT_Le"
 
         response = await client.post(
@@ -99,11 +94,8 @@ class TestRegister:
 
     # Test for email exists: case-sensitive
     async def test_register_user_exists_case_sensitive(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["first_name"] = "Fox"
-        self.request_data["surname"] = "Test_sixth"
         self.request_data["email"] = "test_email_fox@kodecamp.com"
-        self.request_data["password"] = "e-7gSH4kdf"
-
+        self.request_data["password"] = "UB.xd:61RT_Le"
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )

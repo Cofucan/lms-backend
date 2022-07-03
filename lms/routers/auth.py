@@ -11,7 +11,7 @@ from library.schemas.register import UserCreate
 from passlib.context import CryptContext
 
 from models.user import User
-from library.dependencies.to_lowerCase import to_lower_case
+from library.dependencies.utils import to_lower_case
 from library.schemas.register import UserCreate
 from library.schemas.register import UserPublic, EmailVerify
 from library.security.otp import otp_manager
@@ -34,6 +34,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 @router.post("/register/", response_model=UserPublic, name='auth:register', status_code=status.HTTP_201_CREATED)
 async def register(data: UserCreate):
 
+    # Converting new user email to all lower-case before checking and storing in database
     converted_email = to_lower_case(data.email)
 
     email_exist = await User.exists(email=converted_email)
@@ -95,7 +96,7 @@ async def email_verification(otp: str = Path(...)):
 """Login to account"""
 
 @router.post("/login/", response_model=AuthResponse)
-async def Login(data: LoginSchema):
+async def login(data: LoginSchema):
     """handle user Login"""
     user = await User.get_or_none(email=data.username_or_email)
 
@@ -133,7 +134,6 @@ async def Login(data: LoginSchema):
 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return AuthResponse(user=user, token=encoded_jwt)
-
 
 
 @router.post("/forgot-password/", response_model=AuthResponse)
