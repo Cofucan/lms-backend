@@ -79,7 +79,6 @@ async def test_user():
 
     email_exists = await User.filter(email=email).exists()
 
-
     if email_exists:
         return await User.get(email=email)
     else:

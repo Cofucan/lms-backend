@@ -1,19 +1,22 @@
-## Libraries
+# Libraries
 from uuid import UUID
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, status, Path, HTTPException
 
-## Files, Models, Schemas, Dependencies
+# Files, Models, Schemas, Dependencies
 from models.user import User
 from library.security.otp import otp_manager
 from library.dependencies.utils import to_lower_case
-from library.schemas.register import UserCreate, UserPublic, EmailVerify
+from library.schemas.register import UserCreate, EmailVerify
 from library.schemas.auth import (
-    LoginSchema, AuthResponse, JWTSchema,
-    PasswordResetSchema, ForgotPasswordSchema
-    )
+    LoginSchema,
+    AuthResponse,
+    JWTSchema,
+    PasswordResetSchema,
+    ForgotPasswordSchema,
+)
 from config import SECRET_KEY, ALGORITHM
 
 
@@ -25,7 +28,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     "/register/",
     response_model=AuthResponse,
     name="auth:register",
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
 )
 async def register(data: UserCreate):
     """Creates a new user
@@ -41,7 +44,7 @@ async def register(data: UserCreate):
         HTTP_400_BAD_REQUEST if user exists or weak password
     """
 
-    # Converting new user email to all lower-case before checking and storing in database
+    # Converts user email to lower-case
     valid_email = to_lower_case(data.email)
 
     email_exist = await User.exists(email=valid_email)
@@ -50,11 +53,11 @@ async def register(data: UserCreate):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with this email already exist",
         )
-    
+
     hashed_password = pwd_context.hash(data.password)
     created_user = await User.create(
         **data.dict(exclude_unset=True, exclude={"password"}),
-        hashed_password=hashed_password
+        hashed_password=hashed_password,
     )
 
     # Printing the otp on the terminal.
@@ -79,7 +82,7 @@ async def email_verification(otp: str = Path(...)):
     Returns:
         HTTP_200_OK (with user details as defined in the response model)
     Raises:
-        HTTP_401_UNAUTHORIZED if otp is invalid, expired or if verification failed
+        HTTP_401_UNAUTHORIZED if otp is invalid, expired or verification fails
     """
     user_id = otp_manager.get_otp_user(otp)
     if not user_id:
@@ -103,11 +106,11 @@ async def email_verification(otp: str = Path(...)):
     "/login/",
     response_model=AuthResponse,
     name="auth:login",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def login(data: LoginSchema):
     """Handles user login.
-    
+
     Args:
         data - a pydantic schema that defines the user login details
     Return:
@@ -148,11 +151,11 @@ async def login(data: LoginSchema):
 @router.post(
     "/forgot-password/",
     name="auth:forgot-password",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def forgot_password(data: ForgotPasswordSchema):
     """Handles forgot password request
-    
+
     Args:
         data - a pydantic schema that defines forgot password detail
     Return:
@@ -164,7 +167,7 @@ async def forgot_password(data: ForgotPasswordSchema):
     if not user:
         raise HTTPException(
             detail="User does not exist",
-            status_code=status.HTTP_401_UNAUTHORIZED
+            status_code=status.HTTP_401_UNAUTHORIZED,
         )
     expire = datetime.now(timezone.utc) + timedelta(seconds=600)
     to_encode = {"user_id": str(user.id), "expire": str(expire)}
@@ -176,18 +179,18 @@ async def forgot_password(data: ForgotPasswordSchema):
 @router.put(
     "/reset-password/{token}",
     name="auth:reset-password",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
 )
 async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
     """Handles password reset request
-    
+
     Args:
-        data - a pydantic schema that defines the required details tp reset password
+        data - a pydantic schema that defines the required reset details
         token - jwt encoded token sent a s path param
     Return:
         HTTP_200_OK response with a success message
     Raises:
-        HTTP_401_UNAUTHORIZED if decoded token doesn't match any User entry in the DB
+        HTTP_401_UNAUTHORIZED if decoded token doesn't match any User entry
         HTTP_401_UNAUTHORIZED if decoded token is expired
         HTTP_424_FAILED_DEPENDENCY if password reset was unsuccessful
     """
@@ -205,7 +208,7 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
             raise credentials_exception
     except JWTError as e:
         raise credentials_exception from e
-    
+
     # Check token expiration
     if str(datetime.now(timezone.utc)) > expire:
         raise HTTPException(
@@ -219,17 +222,16 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
     if not user:
         raise HTTPException(
             detail="User not found or does not exist",
-            status_code=status.HTTP_401_UNAUTHORIZED
+            status_code=status.HTTP_401_UNAUTHORIZED,
         )
     new_hashed_password = pwd_context.hash(data.password)
     pwd_reset = await User.get(id=user.id).update(
         hashed_password=new_hashed_password
-        )
+    )
 
     if not pwd_reset:
         raise HTTPException(
             detail="Password reset unsuccessful",
-            status_code=status.HTTP_424_FAILED_DEPENDENCY
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
     return {"message": "Password reset successful"}
-      

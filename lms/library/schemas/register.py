@@ -4,12 +4,12 @@ import re
 
 regex = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*+=]).{8,}$"
 
+
 class UserCreate(BaseModel):
     first_name: str = Field(..., max_length=150)
     surname: str = Field(..., max_length=150)
     email: EmailStr
     password: str = Field(..., max_length=40, min_length=8)
-
 
     @root_validator()
     @classmethod
