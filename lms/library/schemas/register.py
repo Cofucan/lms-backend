@@ -2,7 +2,7 @@ from pydantic import BaseModel, EmailStr, Field, root_validator
 from uuid import UUID
 import re
 
-regex = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-~_]).{8,}$"
+regex = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*+=]).{8,}$"
 
 class UserCreate(BaseModel):
     first_name: str = Field(..., max_length=150)
@@ -28,7 +28,7 @@ class UserPublic(BaseModel):
     first_name: str = Field(..., max_length=50)
     surname: str = Field(..., max_length=50)
     email: EmailStr
-       
+
 
 class EmailVerify(BaseModel):
     email_verified: bool

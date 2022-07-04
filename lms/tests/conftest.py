@@ -21,8 +21,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 @pytest.fixture(scope="module")
 def app() -> FastAPI:
     """Get a reference to the application."""
-    app = get_application()
-    return app
+    return get_application()
 
 
 @pytest.fixture(scope="class")
@@ -79,6 +78,7 @@ async def test_user():
     email = "test@email.com"
 
     email_exists = await User.filter(email=email).exists()
+
 
     if email_exists:
         return await User.get(email=email)

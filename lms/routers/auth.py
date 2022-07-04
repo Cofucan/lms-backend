@@ -8,6 +8,7 @@ from fastapi import APIRouter, status, Path, HTTPException
 ## Files, Models, Schemas, Dependencies
 from models.user import User
 from library.security.otp import otp_manager
+from library.dependencies.utils import to_lower_case
 from library.schemas.register import UserCreate, UserPublic, EmailVerify
 from library.schemas.auth import (
     LoginSchema, AuthResponse, JWTSchema,
@@ -17,12 +18,12 @@ from config import SECRET_KEY, ALGORITHM
 
 
 router = APIRouter(prefix="/auth")
-pwd_context = CryptContext(schemes=['bcrypt'],deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 @router.post(
     "/register/",
-    response_model=UserPublic,
+    response_model=AuthResponse,
     name="auth:register",
     status_code=status.HTTP_201_CREATED
 )
@@ -40,29 +41,33 @@ async def register(data: UserCreate):
         HTTP_400_BAD_REQUEST if user exists or weak password
     """
 
-    email_exist = await User.get_or_none(email=data.email)
+    # Converting new user email to all lower-case before checking and storing in database
+    valid_email = to_lower_case(data.email)
+
+    email_exist = await User.exists(email=valid_email)
     if email_exist:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="User with this email already exist"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User with this email already exist",
         )
-    password = data.password
     
-    hashed_password = pwd_context.hash(password)
+    hashed_password = pwd_context.hash(data.password)
     created_user = await User.create(
         **data.dict(exclude_unset=True, exclude={"password"}),
         hashed_password=hashed_password
     )
+
+    # Printing the otp on the terminal.
     otp = otp_manager.create_otp(user_id=str(created_user.id))
-    # You will only get the OTP in your terminal for now. 
     print(otp)
-    return created_user
+    return AuthResponse(user=created_user, token=otp)
 
 
 @router.put(
     "/verify-email/{otp}",
     response_model=EmailVerify,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    # name="auth:verify-email"
 )
 async def email_verification(otp: str = Path(...)):
     """Verifies email of a new user
@@ -79,18 +84,20 @@ async def email_verification(otp: str = Path(...)):
     user_id = otp_manager.get_otp_user(otp)
     if not user_id:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="OTP is invalid or expired"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="OTP is invalid or expired",
         )
         # Convert User-ID to a UUID after being stringified
-    update_user = await User.get(id=UUID(user_id)).update(
-        email_verified = True
-    )
+    update_user = await User.get(id=UUID(user_id)).update(email_verified=True)
     if not update_user:
-        raise HTTPException("Email verification failed", status_code=status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(
+            "Email verification failed",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
     # fetch  and return user after update the User.email_verified
     user = await User.get(id=UUID(user_id))
     return user
-    
+
 
 @router.post(
     "/login/",
@@ -167,8 +174,8 @@ async def forgot_password(data: ForgotPasswordSchema):
 
 
 @router.put(
-    "/password-reset/{token}",
-    name="auth:password-reset",
+    "/reset-password/{token}",
+    name="auth:reset-password",
     status_code=status.HTTP_200_OK
 )
 async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
@@ -203,23 +210,26 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
     if str(datetime.now(timezone.utc)) > expire:
         raise HTTPException(
             status_code=401,
-            detail="Token expired! Please login.",
+            detail="Token expired or invalid!",
         )
 
     # Fetches associated user from db
     user = await User.get_or_none(id=user_id)
+
     if not user:
         raise HTTPException(
             detail="User not found or does not exist",
             status_code=status.HTTP_401_UNAUTHORIZED
         )
     new_hashed_password = pwd_context.hash(data.password)
-    pwd_reset = await User.filter(id=user.id).update(
+    pwd_reset = await User.get(id=user.id).update(
         hashed_password=new_hashed_password
         )
+
     if not pwd_reset:
         raise HTTPException(
             detail="Password reset unsuccessful",
             status_code=status.HTTP_424_FAILED_DEPENDENCY
         )
     return {"message": "Password reset successful"}
+      
