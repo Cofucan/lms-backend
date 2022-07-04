@@ -31,7 +31,11 @@ class OTPManager:
     @classmethod
     def get_otp_user(cls, otp: str):
         """Return the owner of OTP"""
-        return cls.redis.get(otp).decode("utf-8") if cls.redis.exists(otp) else None
+        return (
+            cls.redis.get(otp).decode("utf-8")
+            if cls.redis.exists(otp)
+            else None
+        )
 
 
 otp_manager = OTPManager()

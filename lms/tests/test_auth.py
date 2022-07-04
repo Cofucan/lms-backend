@@ -14,13 +14,15 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class TestRegister:
     request_data = {
         "first_name": "Alpha",
-        "surname": "Test_first",
+        "surname": "Bravo",
         "email": "test_email_alpha_bravo@kodecamp.com",
-        "password": "testHGing-4567890",
-        }
+        "password": "testHGing@4567890",
+    }
 
     # Test successful registration with valid user data
-    async def test_register_valid_user(self, app: FastAPI, client: AsyncClient) -> None:
+    async def test_register_valid_user(
+        self, app: FastAPI, client: AsyncClient
+    ) -> None:
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )
@@ -44,9 +46,10 @@ class TestRegister:
 
         assert len(keys) == 1
 
-
     # Test for email already exists
-    async def test_register_user_exists(self, app: FastAPI, client: AsyncClient) -> None:
+    async def test_register_user_exists(
+        self, app: FastAPI, client: AsyncClient
+    ) -> None:
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )
@@ -55,61 +58,46 @@ class TestRegister:
             response.json().get("detail")
             == "User with this email already exist"
         )
-
 
     # Test for weak password: no uppercase character
-    async def test_register_password_no_upper(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["password"] = ":r~]7s*tvc7/9g}?"
+    async def test_register_password_no_upper(
+        self, app: FastAPI, client: AsyncClient
+    ) -> None:
+        self.request_data["password"] = "#1password"
 
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )
-        assert response.status_code == 400
-        assert (
-                response.json().get("detail")
-            ==  {
-                "password": "Your Password Is Weak",
-                "Hint": "Min. 8 characters, 1 Uppercase, 1 lowercase, 1 number, and 1 special character",
-            },
-        )
+        assert response.status_code == 422
 
     # Test for weak password: no lowercase character
-    async def test_register_password_no_lower(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["password"] = "!J$5):^]ZK`=;${U"
+    async def test_register_password_no_lower(
+        self, app: FastAPI, client: AsyncClient
+    ) -> None:
+        self.request_data["password"] = "#1PASSWORD"
 
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )
-        assert response.status_code == 400
-
+        assert response.status_code == 422
 
     # Test for weak password: no numeric character
-    async def test_register_password_no_nummber(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["password"] = "UB.xd:HRT_Le"
+    async def test_register_password_no_nummber(
+        self, app: FastAPI, client: AsyncClient
+    ) -> None:
+        self.request_data["password"] = "#Password"
 
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )
-        assert response.status_code == 400
-        assert (
-                response.json().get("detail")
-            ==  {
-                "password": "Your Password Is Weak",
-                "Hint": "Min. 8 characters, 1 Uppercase, 1 lowercase, 1 number, and 1 special character",
-            },
-        )
+        assert response.status_code == 422
 
     # Test for email exists: case-sensitive
-    async def test_register_user_exists_case_sensitive(self, app: FastAPI, client: AsyncClient) -> None:
-        self.request_data["email"] = "test_email_fox@kodecamp.com"
-        self.request_data["password"] = "UB.xd:61RT_Le"
-        response = await client.post(
-            app.url_path_for("auth:register"), json=self.request_data
-        )
-        assert response.status_code == 201
-
-
-        self.request_data["email"] = "test_email_FOX@kodecamp.com"
+    async def test_register_user_exists_case_sensitive(
+        self, app: FastAPI, client: AsyncClient
+    ) -> None:
+        self.request_data["email"] = "test_email_Alpha_Bravo@kodecamp.com"
+        self.request_data["password"] = "#1Password"
         response = await client.post(
             app.url_path_for("auth:register"), json=self.request_data
         )
@@ -119,6 +107,20 @@ class TestRegister:
             == "User with this email already exist"
         )
 
+    async def test_email_verification(
+        self, app: FastAPI, client: AsyncClient
+    ) -> None:
+        self.request_data["email"] = "tester_email@kodecamp.com"
+        self.request_data["password"] = "#123Password"
+        response = await client.post(
+            app.url_path_for("auth:register"), json=self.request_data
+        )
+        otp = response.json().get("token")
+        email_verify_response = await client.put(
+            app.url_path_for("email_verification", otp=otp)
+        )
+        assert email_verify_response.status_code == 200
+        assert email_verify_response.status_code != 401
 
 
 class TestLogin:
@@ -126,7 +128,7 @@ class TestLogin:
         self, app: FastAPI, client: AsyncClient, test_user
     ) -> None:
         request_data = {
-            "username_or_email": test_user.email,
+            "email": test_user.email,
             "password": "@123Qwerty",
         }
         response = await client.post(
@@ -142,7 +144,7 @@ class TestLogin:
         self, app: FastAPI, client: AsyncClient, test_user
     ) -> None:
         request_data = {
-            "username_or_email": test_user.email,
+            "email": test_user.email,
             "password": "testingkjsdjrs456",
         }
         response = await client.post(
@@ -151,5 +153,5 @@ class TestLogin:
         assert response.status_code == 401
         assert (
             response.json().get("detail")
-            == "Password Incorrect"
+            == "Your email or password is incorrect."
         )

@@ -75,20 +75,17 @@ def clean_redis():
 async def test_user():
     user_password = "@123Qwerty"
     hashed_password = pwd_context.hash(user_password)
-
-    surname = "surname"
     email = "test@email.com"
 
     email_exists = await User.filter(email=email).exists()
-    username_exists = await User.filter(surname=surname).exists()
 
-    if email_exists or username_exists:
+    if email_exists:
         return await User.get(email=email)
     else:
         return await User.create(
-            surname="surname",
             email="test@email.com",
             first_name="Test",
+            surname="User",
             email_verified=True,
             hashed_password=hashed_password,
         )
