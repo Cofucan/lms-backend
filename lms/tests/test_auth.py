@@ -155,3 +155,34 @@ class TestLogin:
             response.json().get("detail")
             == "Your email or password is incorrect."
         )
+
+    async def test_forgot_password(
+        self, app: FastAPI, client: AsyncClient, test_user
+    ) -> None:
+        req_data = {"email": test_user.email}
+        response = await client.post(
+            app.url_path_for("auth:forgot-password"), json=req_data
+        )
+        assert response.status_code == 200
+        assert (
+            response.json().get("message")
+            == f"Password reset link sent to {test_user.email}"
+        )
+
+    async def test_password_reset(
+        self, app: FastAPI, client: AsyncClient, test_user
+    ) -> None:
+        req_data = {
+            "password": "#123Qwertyz",
+            "confirm_password": "#123Qwertyz",
+        }
+        response = await client.post(
+            app.url_path_for("auth:forgot-password"),
+            json={"email": test_user.email},
+        )
+        token = response.json().get("token")
+        response = await client.put(
+            app.url_path_for("password_reset", token=token), json=req_data
+        )
+        assert response.status_code == 200
+        assert response.json().get("message") == "Password reset successful"
