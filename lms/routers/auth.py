@@ -62,7 +62,7 @@ async def register(data: UserCreate):
 
     # Printing the otp on the terminal.
     otp = otp_manager.create_otp(user_id=str(created_user.id))
-    print(otp)
+    # print(otp)
     return AuthResponse(user=created_user, token=otp)
 
 
@@ -172,13 +172,16 @@ async def forgot_password(data: ForgotPasswordSchema):
     expire = datetime.now(timezone.utc) + timedelta(seconds=600)
     to_encode = {"user_id": str(user.id), "expire": str(expire)}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    print(encoded_jwt)
-    return {"message": f"Password reset link sent to {data.email}"}
+    # print(encoded_jwt)
+    return {
+        "message": f"Password reset link sent to {data.email}",
+        "token": encoded_jwt,
+    }
 
 
 @router.put(
     "/reset-password/{token}",
-    name="auth:reset-password",
+    # name="auth:reset-password",
     status_code=status.HTTP_200_OK,
 )
 async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
