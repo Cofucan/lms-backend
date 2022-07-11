@@ -9,7 +9,7 @@ from fastapi.security import (
 )
 from library.schemas.auth import JWTSchema
 from config import SECRET_KEY, ALGORITHM
-from models.users import User
+from models.user import User
 
 
 oauth2_scheme = OAuth2PasswordBearer(
