@@ -19,11 +19,11 @@ class Announcement(BaseModel):
     stack = fields.CharField(max_length=100, null=True)
     track = fields.CharField(max_length=255, null=True)
     proficiency = fields.CharField(max_length=100, null=True)
-    stage = fields.CharField(max_length=100, null=True)
+    stage = fields.IntField(null=True)
 
 
 class Stage(BaseModel):
-    stage = fields.CharField(max_length=100, null=True)
+    stage = fields.IntField(null=True)
     course = fields.ForeignKeyField(
         "models.Course", related_name="stages", null=True
     )
@@ -34,7 +34,7 @@ class Course(BaseModel):
     stack = fields.CharField(max_length=100, null=True)
     track = fields.CharField(max_length=255, null=True)
     proficiency = fields.CharField(max_length=100, null=True)
-    stage = fields.CharField(max_length=100, null=True)
+    stage = fields.IntField(null=True)
     creator = fields.ForeignKeyField(
         "models.User", related_name="courses", null=True
     )
@@ -58,7 +58,7 @@ class PromotionTask(BaseModel):
     stack = fields.CharField(max_length=100, null=True)
     track = fields.CharField(max_length=255, null=True)
     proficiency = fields.CharField(max_length=100, null=True)
-    stage = fields.CharField(max_length=100, null=True)
+    stage = fields.IntField(null=True)
     feedback = fields.CharField(max_length=655, null=True)
     active = fields.BooleanField(default=False)
     deadline = fields.DatetimeField(auto_now=False, null=True)
@@ -82,6 +82,7 @@ class TaskSubmission(BaseModel):
 
 class Resource(BaseModel):
     """Resources"""
+
     title = fields.CharField(max_length=255, null=True)
     creator = fields.ForeignKeyField(
         "models.User", related_name="resources", null=True
@@ -90,6 +91,7 @@ class Resource(BaseModel):
     url = fields.CharField(max_length=500, null=True)
     filename = fields.CharField(max_length=200, null=True)
     filesize = fields.CharField(max_length=100, null=True)
+
 
 class Media(BaseModel):
     """Media contents"""

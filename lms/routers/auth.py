@@ -8,7 +8,6 @@ from library.schemas.register import UserPublic
 
 # Files, Models, Schemas, Dependencies
 from models.user import User
-from models.dashboard import Resource
 from library.security.otp import otp_manager
 from library.dependencies.auth import get_current_user
 from library.dependencies.utils import to_lower_case
@@ -20,9 +19,6 @@ from library.schemas.auth import (
     JWTSchema,
     PasswordResetSchema,
     ForgotPasswordSchema,
-    ResourceSchema,
-    ResourcePublicSchema,
-    ProfileUpdateSchema
 )
 from config import SECRET_KEY, ALGORITHM
 
@@ -69,11 +65,8 @@ async def register(data: UserCreate):
 
     # Printing the otp on the terminal.
     otp = otp_manager.create_otp(user_id=str(created_user.id))
-    print(otp)
+    # print(otp)
     return AuthResponse(user=created_user, token=otp)
-
-
-
 
 
 @router.put(
@@ -81,15 +74,15 @@ async def register(data: UserCreate):
     response_model=UserPublic,
     status_code=status.HTTP_200_OK,
 )
-async def set_permission(current_user=Security(
-        get_current_user, scopes=["base", "root"]
-        )):
+async def set_permission(
+    current_user=Security(get_current_user, scopes=["base", "root"])
+):
     """Set permission for a user
 
     Set a permission for either a student or an admin
-    Returns user details 
+    Returns user details
     Args:
-        data - a user details which is extracted from the user JWT token generated at the login endpoint 
+        data - a user details which is extracted from the user JWT token generated at the login endpoint
     Returns:
         HTTP_200_OK
     Raises:
@@ -101,13 +94,10 @@ async def set_permission(current_user=Security(
             detail="User Not Found", status_code=status.HTTP_404_NOT_FOUND
         )
     if user.is_admin is False:
-        await User.get(id=current_user.id).update(is_admin = True)
+        await User.get(id=current_user.id).update(is_admin=True)
         return user
-    await User.get(id=current_user.id).update(is_admin = False)
+    await User.get(id=current_user.id).update(is_admin=False)
     return user
-    
-
-
 
 
 @router.put(
@@ -216,7 +206,6 @@ async def forgot_password(data: ForgotPasswordSchema):
     expire = datetime.now(timezone.utc) + timedelta(seconds=600)
     to_encode = {"user_id": str(user.id), "expire": str(expire)}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    print(encoded_jwt)
     return {"message": f"Password reset link sent to {data.email}"}
 
 
@@ -279,102 +268,3 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
     return {"message": "Password reset successful"}
-
-
-
-
-
-
-@router.post(
-    "/resource/post/",
-    response_model=ResourcePublicSchema,
-    status_code=status.HTTP_201_CREATED,
-)
-async def resources_create(
-    data: ResourceSchema, current_user=Security(
-        get_current_user, scopes=["base", "root"]
-        )):
-    """Handles resource(s) post request
-
-    Args:
-        data - a pydantic schema that defines the required resouce(s) details
-        current user - a Dependency that extract user's token from the login url
-    Return:
-        HTTP_201_CREATED response with a success message
-    Raises:
-        HTTP_401_UNAUTHORIZED if the user trying to create resource(s) isn't an admin
-    """
-    verify_user = await User.get(id=current_user.id)
-    if verify_user.is_admin is False:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Only admin can create a resource"
-            )
-    await Resource.create(**data.dict(exclude_unset=True), creator=verify_user)
-    context = {
-        "resources": data,
-        "creator": verify_user
-    }
-    return context
-
-
-
-
-
-@router.put(
-    "/user/profile-update/",
-    status_code=status.HTTP_200_OK
-)
-async def profile_update(data: ProfileUpdateSchema,  
-    current_user=Security(
-        get_current_user, scopes=["base", "roots"]
-        )):
-
-    """Handles user's profile update request
-
-    Args:
-        data - a pydantic schema that defines the required user's details to be updated
-    Return:
-        HTTP_200_OK response with a success message
-    Raise:
-        HTTP_404_NOT_FOUND - throws a does not exist error if there's no user with the supplied token
-        HTTP_400_BAD_REQUEST- throws an error if new password isn't supplied for password update
-        HTTP_400_BAD_REQUEST- throws an error if old password isn't supplied for password update
-        HTTP_400_BAD_REQUEST- throws an error if password supplied does not match
-    """
-    user = await User.get(id=current_user.id)
-    user_hashed_password = user.hashed_password
-    if not user:
-        raise HTTPException(detail="User does not exist", status_code=status.HTTP_404_NOT_FOUND) 
-
-    password = data.password
-    old_password = data.old_password
-    #Verify is old password data is provided without the new password data 
-    if old_password and not password:
-        raise HTTPException(detail={"error":"Provide new password"}, status_code=status.HTTP_400_BAD_REQUEST)
-
-    if not password and old_password:
-        # Updates user profile based on request data if password isn't provided
-        user_update = User.get(id=current_user.id).update(**data.dict(exclude_unset=True))
-        return "Profile update was successful"
- 
-    # return error if old password isn't provided it's a 'Profile update' endpoint and not 'Forget Password'
-    if not old_password:
-        raise HTTPException(detail={"error":"Old password must be provided"}, status_code=status.HTTP_400_BAD_REQUEST)
-
-    # Verify is the supplied old password correlates with the User's hashed password in the database
-    verify_user_password: bool =pwd_context.verify(
-        old_password, user_hashed_password
-    )
-    # Throw an error if the supplied password password does not match
-    if not verify_user_password:
-        raise HTTPException (detail={"error":"Incorrect password"}, status_code=status.HTTP_400_BAD_REQUEST)
-
-    # Hash user's password before updating the User's data
-    hashed_password = pwd_context.hash(data.password)
-    updated_user = await  User.get(id=current_user.id).update(
-        **data.dict(exclude_unset=True, 
-        exclude={"password", "old_password"}), 
-        hashed_password=hashed_password
-        )
-    return "Profile Update successfully"

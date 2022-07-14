@@ -9,7 +9,7 @@ class User(BaseModel):
     email = fields.CharField(max_length=100, null=True)
     phone = fields.CharField(max_length=100, null=True)
     gender = fields.CharField(max_length=100, null=True)
-    stage = fields.CharField(max_length=100, null=True)
+    stage = fields.IntField(null=True)
     stack = fields.CharField(max_length=100, null=True)
     track = fields.CharField(max_length=100, null=True)
     proficiency = fields.CharField(max_length=100, null=True)
