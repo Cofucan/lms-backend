@@ -4,6 +4,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, status, Path, HTTPException
+from library.schemas.register import UserPublic
 
 # Files, Models, Schemas, Dependencies
 from models.user import User
@@ -55,6 +56,7 @@ async def register(data: UserCreate):
         )
 
     hashed_password = pwd_context.hash(data.password)
+
     created_user = await User.create(
         **data.dict(exclude_unset=True, exclude={"password"}),
         hashed_password=hashed_password,
@@ -238,3 +240,17 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
     return {"message": "Password reset successful"}
+
+
+
+@router.put(
+    "/set-admin/{email}",
+    response_model=UserPublic,
+    status_code=status.HTTP_200_OK,
+)
+async def set_admin(email: str = Path(...)):
+    user = await User.get_or_none(email=email)
+    print(user)
+    return user
+
+    
