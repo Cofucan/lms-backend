@@ -82,6 +82,7 @@ class TaskSubmission(BaseModel):
 
 class Resource(BaseModel):
     """Resources"""
+
     title = fields.CharField(max_length=255, null=True)
     creator = fields.ForeignKeyField(
         "models.User", related_name="resources", null=True
