@@ -270,14 +270,3 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
     return {"message": "Password reset successful"}
-
-
-@router.put(
-    "/set-admin/{email}",
-    response_model=UserPublic,
-    status_code=status.HTTP_200_OK,
-)
-async def set_admin(email: str = Path(...)):
-    user = await User.get_or_none(email=email)
-    print(user)
-    return user
