@@ -29,6 +29,16 @@ async def create_lesson(
     data: LessonCreate,
     current_user=Security(get_current_user, scopes=["base"]),
 ):
+    """Handles lesson(s) creation through a POST request
+
+    Args:
+        data - a pydantic schema that defines the required lesson(s) details
+        current user - a Dependency that extract user's token from the login url
+    Return:
+        HTTP_201_CREATED response with a success message
+    Raises:
+        HTTP_401_UNAUTHORIZED if the user trying to create lesson(s) isn't an admin
+    """
     user = await User.get(id=current_user.id)
 
     if not user.is_admin:
@@ -55,12 +65,22 @@ async def create_promo_task(
     data: PromoTaskCreate,
     current_user=Security(get_current_user, scopes=["base"]),
 ):
+    """Handles creatuon of promotional tasks
+
+    Args:
+        data - a pydantic schema that defines the required promotional task details
+        current user - a Dependency that extract user's token from the login url
+    Return:
+        HTTP_201_CREATED response with a success message
+    Raises:
+        HTTP_401_UNAUTHORIZED if the user trying to create promotional task isn't an admin
+    """
     user = await User.get(id=current_user.id)
 
     if not user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Only an admin can create lessons.",
+            detail="Only an admin can create promotional tasks.",
         )
 
     promo_task = await PromotionTask.create(
