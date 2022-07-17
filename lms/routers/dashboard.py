@@ -1,14 +1,20 @@
 from routers.auth import router, pwd_context
 from models.user import User
-from models.dashboard import Resource
+from models.dashboard import Resource 
 from fastapi import status, HTTPException, Security
 from models.user import User
-from models.dashboard import Resource
+from models.dashboard import (
+    Resource, 
+    TaskSubmission,
+    PromotionTask
+)
 from library.dependencies.auth import get_current_user
 from library.schemas.dashboard import (
     ResourceSchema,
     ResourcePublicSchema,
     ProfileUpdateSchema,
+    TaskSubmissionSchema,
+    TaskPublicSchema
 )
 
 
@@ -100,3 +106,22 @@ async def profile_update(
         hashed_password=hashed_password,
     )
     return "Profile Update successfully"
+
+
+
+@router.post(
+    "/submit-task/{task_id}/",
+    name="task:submit",
+    status_code=status.HTTP_200_OK,
+    response_model=TaskPublicSchema,
+    description="Submit a task."    
+)
+async def submit_task(
+    data:TaskSubmissionSchema,
+    task: str = Path(...),
+    current_user = Security(get_current_user, scopes=["base", "root"])
+):
+    task = await PromotionTask.get_or_none(id=task_id) 
+    submission = await TaskSubmission.create(
+        url=data.url,
+    ) 
