@@ -1,8 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, root_validator
+from library.dependencies.utils import regex
 from uuid import UUID
 import re
-
-regex = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*+=]).{8,}$"
 
 
 class UserCreate(BaseModel):

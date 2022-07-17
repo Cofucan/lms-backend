@@ -3,13 +3,15 @@ from uuid import UUID
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, status, Path, HTTPException
+from fastapi import APIRouter, status, Path, HTTPException, Security
 
 # Files, Models, Schemas, Dependencies
 from models.user import User
 from library.security.otp import otp_manager
 from library.dependencies.utils import to_lower_case
-from library.schemas.register import UserCreate, EmailVerify
+from library.dependencies.auth import get_current_user
+from library.schemas.dashboard import ProfileUpdateSchema
+from library.schemas.register import UserCreate, EmailVerify, UserPublic
 from library.schemas.auth import (
     LoginSchema,
     AuthResponse,
@@ -198,7 +200,7 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
         HTTP_424_FAILED_DEPENDENCY if password reset was unsuccessful
     """
     credentials_exception = HTTPException(
-        status_code=401,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
