@@ -2,7 +2,9 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, root_validator, Field
 
+from library.schemas.register import UserPublic
 from library.schemas.register import UserPublic, regex
+import re
 
 
 class LoginSchema(BaseModel):

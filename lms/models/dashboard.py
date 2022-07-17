@@ -24,19 +24,19 @@ class Announcement(BaseModel):
 
 class Stage(BaseModel):
     stage = fields.IntField(null=True)
-    course = fields.ForeignKeyField(
-        "models.Course", related_name="stages", null=True
+    lesson = fields.ForeignKeyField(
+        "models.Lesson", related_name="stages", null=True
     )
 
 
-class Course(BaseModel):
+class Lesson(BaseModel):
     title = fields.CharField(max_length=255, null=True)
     stack = fields.CharField(max_length=100, null=True)
     track = fields.CharField(max_length=255, null=True)
     proficiency = fields.CharField(max_length=100, null=True)
     stage = fields.IntField(null=True)
     creator = fields.ForeignKeyField(
-        "models.User", related_name="courses", null=True
+        "models.User", related_name="lessons", null=True
     )
     content = fields.CharField(max_length=655, null=True)
 
@@ -82,6 +82,7 @@ class TaskSubmission(BaseModel):
 
 class Resource(BaseModel):
     """Resources"""
+
     title = fields.CharField(max_length=255, null=True)
     creator = fields.ForeignKeyField(
         "models.User", related_name="resources", null=True
@@ -96,7 +97,7 @@ class Media(BaseModel):
     """Media contents"""
 
     content = fields.ForeignKeyField(
-        "models.Course", related_name="media", null=True
+        "models.Lesson", related_name="media", null=True
     )
     url = fields.CharField(max_length=500, null=True)
     filename = fields.CharField(max_length=200, null=True)

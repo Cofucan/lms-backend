@@ -8,9 +8,9 @@ from fastapi import APIRouter, status, Path, HTTPException, Security
 # Files, Models, Schemas, Dependencies
 from models.user import User
 from library.security.otp import otp_manager
+from library.dependencies.auth import get_current_user
 from library.dependencies.utils import to_lower_case
 from library.dependencies.auth import get_current_user
-from library.schemas.dashboard import ProfileUpdateSchema
 from library.schemas.register import UserCreate, EmailVerify, UserPublic
 from library.schemas.auth import (
     LoginSchema,
@@ -41,7 +41,7 @@ async def register(data: UserCreate):
         data - a pydantic schema that defines the user registration params
     Returns:
         HTTP_201_CREATED (with user details as defined in the response model)
-        Sends otp via STMP as a background task
+        Sends otp via SMTP as a background task
     Raises:
         HTTP_400_BAD_REQUEST if user exists or weak password
     """
@@ -57,15 +57,48 @@ async def register(data: UserCreate):
         )
 
     hashed_password = pwd_context.hash(data.password)
+
     created_user = await User.create(
         **data.dict(exclude_unset=True, exclude={"password"}),
         hashed_password=hashed_password,
+        is_admin=True,
     )
 
     # Printing the otp on the terminal.
     otp = otp_manager.create_otp(user_id=str(created_user.id))
     # print(otp)
     return AuthResponse(user=created_user, token=otp)
+
+
+@router.put(
+    "/set-permission/",
+    response_model=UserPublic,
+    status_code=status.HTTP_200_OK,
+)
+async def set_permission(
+    current_user=Security(get_current_user, scopes=["base", "root"])
+):
+    """Set permission for a user
+
+    Set a permission for either a student or an admin
+    Returns user details
+    Args:
+        data - a user details which is extracted from the user JWT token generated at the login endpoint
+    Returns:
+        HTTP_200_OK
+    Raises:
+        HTTP_404_NOT_FOUND if the detail does not match any user in the database
+    """
+    user = await User.get(id=current_user.id)
+    if user is None:
+        raise HTTPException(
+            detail="User Not Found", status_code=status.HTTP_404_NOT_FOUND
+        )
+    if user.is_admin is False:
+        await User.get(id=current_user.id).update(is_admin=True)
+        return user
+    await User.get(id=current_user.id).update(is_admin=False)
+    return user
 
 
 @router.put(
@@ -174,16 +207,12 @@ async def forgot_password(data: ForgotPasswordSchema):
     expire = datetime.now(timezone.utc) + timedelta(seconds=600)
     to_encode = {"user_id": str(user.id), "expire": str(expire)}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    # print(encoded_jwt)
-    return {
-        "message": f"Password reset link sent to {data.email}",
-        "token": encoded_jwt,
-    }
+    return {"message": f"Password reset link sent to {data.email}"}
 
 
 @router.put(
     "/reset-password/{token}",
-    # name="auth:reset-password",
+    name="auth:reset-password",
     status_code=status.HTTP_200_OK,
 )
 async def password_reset(data: PasswordResetSchema, token: str = Path(...)):

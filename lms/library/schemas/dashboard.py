@@ -1,10 +1,12 @@
-from typing import List, Optional
 from uuid import UUID
+from typing import Optional
+from datetime import datetime
 from pydantic import BaseModel, Field, root_validator
-from library.schemas.enums import Stack, Track, Proficiency
+
 from library.dependencies.utils import regex
 from library.schemas.register import UserPublic
-
+from library.schemas.common import CommonModel
+from library.schemas.enums import Stack, Track, Proficiency
 
 class AnnouncementCreate(BaseModel):
     title: str = Field(..., max_length=50, min_length=0)
@@ -54,7 +56,6 @@ class AnnouncementCreate(BaseModel):
         return values
 
 
-
 class AnnouncementResponse(BaseModel):
     title: str
     content: str
@@ -62,10 +63,65 @@ class AnnouncementResponse(BaseModel):
     creator: UserPublic
 
 
+class LessonCreate(BaseModel):
+    title: str = Field(..., max_length=100)
+    stack: str = Field(..., max_length=255)
+    track: str = Field(..., max_length=100)
+    proficiency: str = Field(..., max_length=100)
+    stage: int = Field(..., ge=0, le=20)
+    content: str = Field(..., max_length=655)
+
+
+class LessonPublic(CommonModel):
+    title: str
+    stack: str
+    track: str
+    proficiency: str
+    stage: int
+    content: str
+
+
+class PromoTaskCreate(BaseModel):
+    title: str = Field(..., max_length=255)
+    stack: str = Field(..., max_length=100)
+    track: str = Field(..., max_length=255)
+    proficiency: str = Field(..., max_length=100)
+    stage: int = Field(..., ge=0, le=20)
+    content: str = Field(..., max_length=655)
+    active: bool
+    feedback: Optional[str] = None
+    deadline: Optional[datetime]
+
+
+class PromoTaskPublic(CommonModel):
+    title: str
+    stack: str
+    track: str
+    proficiency: str
+    stage: int
+    content: str
+    active: bool
+    deadline: Optional[datetime]
+
+
 class ProfileUpdateSchema(BaseModel):
-    stage: Optional[int]
     stack: Optional[Stack]
     track: Optional[Track]
     proficiency: Optional[Proficiency]
     old_password: Optional[str] = None
     password: Optional[str] = Field(regex=regex)
+
+
+class ResourceCreate(BaseModel):
+    title: str = Field(..., max_length=255)
+    content: str = Field(..., max_length=655)
+    url: str = Field(..., max_length=500)
+    filesize: str = Field(..., max_length=100)
+    stack: str = Field(..., max_length=100)
+    track: str = Field(..., max_length=255)
+    proficiency: str = Field(..., max_length=100)
+
+
+class ResourcePublic(BaseModel):
+    creator: UserPublic
+    resources: ResourceCreate
