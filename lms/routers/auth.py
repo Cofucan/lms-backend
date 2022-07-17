@@ -58,9 +58,11 @@ async def register(data: UserCreate):
         )
 
     hashed_password = pwd_context.hash(data.password)
+
     created_user = await User.create(
         **data.dict(exclude_unset=True, exclude={"password"}),
         hashed_password=hashed_password,
+        is_admin=True,
     )
 
     # Printing the otp on the terminal.

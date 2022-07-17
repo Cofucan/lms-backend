@@ -34,8 +34,8 @@ async def get_current_user(
 
         if user_id is None or expire is None:
             raise auth_exception
-    except (JWTError, ValidationError):
-        raise auth_exception
+    except (JWTError, ValidationError) as e:
+        raise auth_exception from e
 
     # Check expiration.
     if datetime.now(timezone.utc) > token_data.expire:
