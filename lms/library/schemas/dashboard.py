@@ -25,3 +25,14 @@ class ResourceSchema(BaseModel):
 class ResourcePublicSchema(BaseModel):
     creator: UserPublic
     resources: ResourceSchema
+
+
+class TaskSubmissionSchema(BaseModel):
+    """Submit tasks"""
+    url: str = Field(..., max_length=500)
+
+
+class TaskPublicSchema(BaseModel):
+    url: str
+    graded: bool
+    submitted: bool
