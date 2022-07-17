@@ -1,24 +1,104 @@
+from fastapi import APIRouter, status, HTTPException, Security
 from routers.auth import router, pwd_context
 from models.user import User
-from models.dashboard import Resource
-from fastapi import status, HTTPException, Security
-from models.user import User
-from models.dashboard import Resource
+from models.dashboard import Lesson, PromotionTask, Resource
 from library.dependencies.auth import get_current_user
+from library.dependencies.utils import *
 from library.schemas.dashboard import (
-    ResourceSchema,
-    ResourcePublicSchema,
+    LessonCreate,
+    LessonPublic,
+    PromoTaskCreate,
+    PromoTaskPublic,
+    ResourceCreate,
+    ResourcePublic,
     ProfileUpdateSchema,
 )
 
 
+router = APIRouter(prefix="/dashboard")
+
+
 @router.post(
-    "/resource/post/",
-    response_model=ResourcePublicSchema,
+    "/lesson/create/",
+    name="lesson:create",
     status_code=status.HTTP_201_CREATED,
+    response_model=LessonPublic,
+    description="Create lesson content.",
+)
+async def create_lesson(
+    data: LessonCreate,
+    current_user=Security(get_current_user, scopes=["base"]),
+):
+    """Handles lesson(s) creation through a POST request
+
+    Args:
+        data - a pydantic schema that defines the required lesson(s) details
+        current user - a Dependency that extract user's token from the login url
+    Return:
+        HTTP_201_CREATED response with a success message
+    Raises:
+        HTTP_401_UNAUTHORIZED if the user trying to create lesson(s) isn't an admin
+    """
+    user = await User.get(id=current_user.id)
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Only an admin can create lessons.",
+        )
+
+    lesson = await Lesson.create(
+        **data.dict(exclude_unset=True), creator=current_user
+    )
+
+    return lesson
+
+
+@router.post(
+    "/promo-task/create/",
+    name="course:promo_task",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PromoTaskPublic,
+    description="Create promotional task.",
+)
+async def create_promo_task(
+    data: PromoTaskCreate,
+    current_user=Security(get_current_user, scopes=["base"]),
+):
+    """Handles creatuon of promotional tasks
+
+    Args:
+        data - a pydantic schema that defines the required promotional task details
+        current user - a Dependency that extract user's token from the login url
+    Return:
+        HTTP_201_CREATED response with a success message
+    Raises:
+        HTTP_401_UNAUTHORIZED if the user trying to create promotional task isn't an admin
+    """
+    user = await User.get(id=current_user.id)
+
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Only an admin can create promotional tasks.",
+        )
+
+    promo_task = await PromotionTask.create(
+        **data.dict(exclude_unset=True), creator=current_user
+    )
+
+    return promo_task
+
+
+@router.post(
+    "/resource/create/",
+    name="resource:create",
+    response_model=ResourcePublic,
+    status_code=status.HTTP_201_CREATED,
+    description="Create resources.",
 )
 async def resources_create(
-    data: ResourceSchema,
+    data: ResourceCreate,
     current_user=Security(get_current_user, scopes=["base", "root"]),
 ):
     """Handles resource(s) post request
@@ -38,8 +118,7 @@ async def resources_create(
             detail="Only admin can create a resource",
         )
     await Resource.create(**data.dict(exclude_unset=True), creator=verify_user)
-    context = {"resources": data, "creator": verify_user}
-    return context
+    return {"resources": data, "creator": verify_user}
 
 
 @router.put("/user/profile-update/", status_code=status.HTTP_200_OK)
@@ -95,7 +174,7 @@ async def profile_update(
         )
     # Hash user's password before updating the User's data
     hashed_password = pwd_context.hash(data.password)
-    updated_user = await User.get(id=current_user.id).update(
+    await User.get(id=current_user.id).update(
         **data.dict(exclude_unset=True, exclude={"password", "old_password"}),
         hashed_password=hashed_password,
     )
