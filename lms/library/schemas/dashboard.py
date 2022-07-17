@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from library.schemas.register import UserPublic
+from library.schemas.shared import SharedModel
 from library.dependencies.utils import regex
 import pydantic
 
@@ -32,7 +33,7 @@ class TaskSubmissionSchema(BaseModel):
     url: str = Field(..., max_length=500)
 
 
-class TaskPublicSchema(BaseModel):
+class TaskPublicSchema(SharedModel):
     url: str
     graded: bool
     submitted: bool
