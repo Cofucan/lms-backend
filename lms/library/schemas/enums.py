@@ -3,15 +3,17 @@ from enum import Enum
 
 class Stack(str, Enum):
     """Enum list of all the stacks
-    
+
     BE, FE, DESIGN, PM, CLOUD, and DS
     """
+
     BE = "backend"
     FE = "frontend"
     DESIGN = "design"
     PM = "product management"
     CLOUD = "cloud engineering"
     DS = "data science"
+
 
 class Track(str, Enum):
     """Enum list of all the tracks in different stacks
@@ -23,6 +25,7 @@ class Track(str, Enum):
     Design:
         PRODUCT_DESIGN, UIUX_DESIGN
     """
+
     BE_NODE = "nodejs"
     BE_PYTHON = "python"
     BE_PHP = "php"
@@ -39,6 +42,7 @@ class Proficiency(str, Enum):
 
     BEGINNER, INTERMEDIATE, ADVANCED
     """
+
     BEGINNER = "beginner"
     INTERMEDIATE = "intermediate"
     ADVANCED = "advanced"

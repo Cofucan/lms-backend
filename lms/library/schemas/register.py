@@ -1,7 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, root_validator
-from library.dependencies.utils import regex
+from library.dependencies.utils import validate_password
 from uuid import UUID
-import re
 
 
 class UserCreate(BaseModel):
@@ -11,15 +10,8 @@ class UserCreate(BaseModel):
     password: str = Field(..., max_length=40, min_length=8)
 
     @root_validator()
-    @classmethod
-    def validate_password(cls, values):
-        pwd = values.get("password")
-        if not re.match(regex, pwd):
-            raise ValueError(
-                "Password must contain Min. 8 characters, 1 Uppercase,\
-                1 lowercase, 1 number, and 1 special character"
-            )
-        return values
+    def validate_password_value(cls, values):
+        return validate_password(values=values)
 
 
 class UserPublic(BaseModel):

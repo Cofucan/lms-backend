@@ -3,8 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, root_validator, Field
 
 from library.schemas.register import UserPublic
-from library.schemas.register import UserPublic, regex
-import re
+from library.dependencies.utils import validate_password
 
 
 class LoginSchema(BaseModel):
@@ -27,8 +26,12 @@ class ForgotPasswordSchema(BaseModel):
 
 
 class PasswordResetSchema(BaseModel):
-    password: str = Field(..., max_length=40, min_length=8, regex=regex)
+    password: str = Field(..., max_length=40, min_length=8)
     confirm_password: str
+
+    @root_validator()
+    def validate_password_pattern(cls, values):
+        return validate_password(values=values)
 
     @root_validator()
     def verify_password_match(cls, values):
