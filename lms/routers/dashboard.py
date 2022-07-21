@@ -297,4 +297,20 @@ async def profile_update(
     return {"message": "Profile successfully updated"}  
 
 
+@router.post(
+    "/submit-task/{task_id}/",
+    name="task:submit",
+    status_code=status.HTTP_200_OK,
+    response_model=TaskPublicSchema,
+    description="Submit a task."    
+)
+async def submit_task(
+    data:TaskSubmissionSchema,
+    task: str = Path(...),
+    current_user = Security(get_current_user, scopes=["base", "root"])
+):
+    task = await PromotionTask.get_or_none(id=task_id) 
+    submission = await TaskSubmission.create(
+        url=data.url,
+    ) 
    
