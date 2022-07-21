@@ -1,73 +1,124 @@
-from pydantic import BaseModel, Field
 from typing import Optional
-
 from datetime import datetime
+from pydantic import BaseModel, Field, root_validator
+
+from library.dependencies.utils import regex, validate_stack_and_track
 from library.schemas.register import UserPublic
-from library.schemas.shared import SharedModel
-from library.schemas.common import CommonModel
-from library.dependencies.utils import regex
-import pydantic
+from library.schemas.common import CommonBase, CommonResponse
+from library.schemas.enums import Stack, Track, Proficiency
 
 
-class LessonCreate(BaseModel):
-    title: str = Field(..., max_length=100)
-    stack: str = Field(..., max_length=255)
-    track: str = Field(..., max_length=100)
-    proficiency: str = Field(..., max_length=100)
-    stage: int = Field(..., ge=0, le=20)
-    content: str = Field(..., max_length=655)
+class AnnouncementCreate(BaseModel):
+    title: str = Field(..., max_length=250, min_length=1)
+    content: str = Field(..., max_length=654, min_length=1)
+    general: bool
+    stage: int = Field(None, ge=0, le=20)
+    stack: Optional[Stack]
+    track: Optional[Track]
+    proficiency: Optional[Proficiency]
+
+    @root_validator()
+    def validate_announcement(cls, values):
+        stage = values.get("stage")
+        stack = values.get("stack")
+        track = values.get("track")
+        general = values.get("general")
+        proficiency = values.get("proficiency")
+        if general and (stage or stack or track or proficiency):
+            raise ValueError(
+                "General cannot have a stack, stage, track or proficiency"
+            )
+        return values
+
+    @root_validator()
+    def validate_input(cls, values):
+        return validate_stack_and_track(values=values)
+
+    @root_validator()
+    def validate_fields(cls, values):
+        stage = values.get("stage")
+        track = values.get("track")
+        proficiency = values.get("proficiency")
+        if values.get("stack") and (not stage or not track or not proficiency):
+            raise ValueError(
+                "Stack announcement must have a stage, track and proficiency"
+            )
+        if (stage or track or proficiency) and not values.get("stack"):
+            raise ValueError("Non-general announcement must have a stack")
+        return values
 
 
-class LessonPublic(CommonModel):
-    title: str
+class AnnouncementResponse(CommonResponse):
+    creator: UserPublic
+
+
+class LessonCreate(CommonBase):
+    @root_validator()
+    def validate_input(cls, values):
+        return validate_stack_and_track(values=values)
+
+
+class LessonResponse(CommonResponse):
     stack: str
     track: str
     proficiency: str
     stage: int
-    content: str
 
 
-class PromoTaskCreate(BaseModel):
-    title: str = Field(..., max_length=255)
-    stack: str = Field(..., max_length=100)
-    track: str = Field(..., max_length=255)
-    proficiency: str = Field(..., max_length=100)
-    stage: int = Field(..., ge=0, le=20)
-    content: str = Field(..., max_length=655)
+class PromoTaskCreate(CommonBase):
     active: bool
     feedback: Optional[str] = None
-    deadline: Optional[datetime]
+    deadline: int = Field(..., ge=1, le=14)
+
+    @root_validator()
+    def validate_input(cls, values):
+        return validate_stack_and_track(values=values)
 
 
-class PromoTaskPublic(CommonModel):
-    title: str
+class PromoTaskResponse(CommonResponse):
     stack: str
     track: str
     proficiency: str
     stage: int
-    content: str
     active: bool
-    deadline: Optional[datetime]
+    deadline: datetime
 
 
 class ProfileUpdateSchema(BaseModel):
-    track: Optional[str] = None
-    proficiency: Optional[str] = None
+    first_name: Optional[str] = Field(None, max_length=60)
+    surname: Optional[str] = Field(None, max_length=60)
+    phone: Optional[str] = Field(None, max_length=15)
+    stack: Optional[Stack]
+    track: Optional[Track]
+    proficiency: Optional[Proficiency]
     old_password: Optional[str] = None
-    password: Optional[str] = pydantic.Field(regex=regex)
+    password: Optional[str] = Field(regex=regex)
+
+    @root_validator()
+    def validate_password_values(cls, values):
+        password = values.get("password")
+        old_password = values.get("old_password")
+        if old_password and not password:
+            raise ValueError("Please new password must be provided")
+        if password and not old_password:
+            raise ValueError("Please old password must be provided")
+        return values
+
+    @root_validator()
+    def validate_input(cls, values):
+        return validate_stack_and_track(values=values)
 
 
-class ResourceCreate(BaseModel):
-    title: str = Field(..., max_length=255)
-    content: str = Field(..., max_length=655)
+class ResourceCreate(CommonBase):
     url: str = Field(..., max_length=500)
-    filesize: str = Field(..., max_length=100)
-    stack: str = Field(..., max_length=100)
-    track: str = Field(..., max_length=255)
-    proficiency: str = Field(..., max_length=100)
+    filesize: Optional[str] = Field(max_length=100)
+
+    @root_validator()
+    def validate_input(cls, values):
+        return validate_stack_and_track(values=values)
 
 
-class ResourcePublic(BaseModel):
+class ResourceResponse(BaseModel):
     creator: UserPublic
     resources: ResourceSchema
 

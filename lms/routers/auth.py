@@ -4,15 +4,13 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, status, Path, HTTPException, Security
-from library.schemas.register import UserPublic
 
 # Files, Models, Schemas, Dependencies
 from models.user import User
 from library.security.otp import otp_manager
-from library.dependencies.auth import get_current_user
 from library.dependencies.utils import to_lower_case
-
-from library.schemas.register import UserCreate, EmailVerify
+from library.dependencies.auth import get_current_user
+from library.schemas.register import UserCreate, EmailVerify, UserPublic
 from library.schemas.auth import (
     LoginSchema,
     AuthResponse,
@@ -72,33 +70,47 @@ async def register(data: UserCreate):
 
 
 @router.put(
-    "/set-permission/",
+    "/set-permission/{user_id}",
     response_model=UserPublic,
     status_code=status.HTTP_200_OK,
 )
 async def set_permission(
-    current_user=Security(get_current_user, scopes=["base", "root"])
+    user_id: str = Path(...),
+    current_user=Security(get_current_user, scopes=["base", "root"]),
 ):
     """Set permission for a user
 
     Set a permission for either a student or an admin
     Returns user details
     Args:
-        data - a user details which is extracted from the user JWT token generated at the login endpoint
+        user_id - id of user to be made an admin
+        current_user - retrieved from login auth
     Returns:
-        HTTP_200_OK
+        HTTP_200_OK if successful
     Raises:
-        HTTP_404_NOT_FOUND if the detail does not match any user in the database
+        HTTP_404_NOT_FOUND if user not found
+        HTTP_424_FAILED_DEPENDENCY if DB service fails
     """
-    user = await User.get(id=current_user.id)
-    if user is None:
+
+    if current_user.is_admin is False:
         raise HTTPException(
-            detail="User Not Found", status_code=status.HTTP_404_NOT_FOUND
+            detail="Only admins can set permission",
+            status_code=status.HTTP_401_UNAUTHORIZED,
         )
-    if user.is_admin is False:
-        await User.get(id=current_user.id).update(is_admin=True)
-        return user
-    await User.get(id=current_user.id).update(is_admin=False)
+    user = await User.get(id=user_id)
+    if not user:
+        raise HTTPException(
+            detail="User not found", status_code=status.HTTP_404_NOT_FOUND
+        )
+    if user.is_admin:
+        user = await User.get(id=user.id).update(is_admin=False)
+    else:
+        user = await User.get(id=current_user.id).update(is_admin=True)
+    if not user:
+        raise HTTPException(
+            detail="Permission not set",
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+        )
     return user
 
 
@@ -208,7 +220,10 @@ async def forgot_password(data: ForgotPasswordSchema):
     expire = datetime.now(timezone.utc) + timedelta(seconds=600)
     to_encode = {"user_id": str(user.id), "expire": str(expire)}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return {"message": f"Password reset link sent to {data.email}"}
+    return {
+        "message": f"Password reset link sent to {data.email}",
+        "token": encoded_jwt,
+    }
 
 
 @router.put(
@@ -230,7 +245,7 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
         HTTP_424_FAILED_DEPENDENCY if password reset was unsuccessful
     """
     credentials_exception = HTTPException(
-        status_code=401,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
