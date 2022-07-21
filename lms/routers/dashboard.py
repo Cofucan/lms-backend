@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, HTTPException, Security
 from routers.auth import router, pwd_context
 from models.user import User
-from models.dashboard import Lesson, PromotionTask, Resource
+from models.dashboard import Lesson, PromotionTask, Resource, TaskSubmission
 from library.dependencies.auth import get_current_user
 from library.dependencies.utils import *
 from library.schemas.dashboard import (
