@@ -81,19 +81,22 @@ async def get_announcements(
         HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
     """
     general = await Announcement.filter(general="true")
-    all_announcements = await Announcement.filter(
+    all_announcements = await Announcement.all()
+    target_announcements = await Announcement.filter(
         stack=current_user.stack,
         stage=current_user.stage,
         track=current_user.track,
         proficiency=current_user.proficiency,
     )
-    if not (general or all_announcements):
-        raise HTTPException(
-            detail="Failed to load all announcements",
-            status_code=status.HTTP_424_FAILED_DEPENDENCY,
-        )
-    all_announcements.append(general)
-    return all_announcements
+    # if not (general or all_announcements):
+    #     raise HTTPException(
+    #         detail="Failed to load all announcements",
+    #         status_code=status.HTTP_424_FAILED_DEPENDENCY,
+    #     )
+    if current_user.is_admin:
+        return all_announcements
+    target_announcements.append(general)
+    return target_announcements
 
 
 @router.get(
@@ -174,7 +177,7 @@ async def create_lesson(
 
 @router.post(
     "/promotion-tasks/",
-    name="course:promotion-task",
+    name="dashboard:promotion-task",
     status_code=status.HTTP_201_CREATED,
     response_model=PromoTaskResponse,
     description="Create promotional task.",
@@ -292,3 +295,71 @@ async def profile_update(
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
     return {"message": "Profile successfully updated"}
+
+
+@router.get(
+    "/lessons/",
+    name="dashboard:all-lessons",
+    status_code=status.HTTP_200_OK,
+)
+async def get_lessons(
+    current_user=Security(get_current_user, scopes=["base"])
+):
+    """Gets all lessons using key fields in User object
+
+    Args:
+        current_user - retrieved from login auth
+    Return:
+        HTTP_200_OK response with a list of all related lessons and their content
+    Raises:
+        HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
+    """
+    all_lessons = await Lesson.all()
+    target_lessons = await Lesson.filter(
+        stack=current_user.stack,
+        stage=current_user.stage,
+        track=current_user.track,
+        proficiency=current_user.proficiency,
+    )
+    # if not (general or all_announcements):
+    #     raise HTTPException(
+    #         detail="Failed to load all announcements",
+    #         status_code=status.HTTP_424_FAILED_DEPENDENCY,
+    #     )
+    if current_user.is_admin:
+        return all_lessons
+    return target_lessons
+
+
+@router.get(
+    "/promotion-tasks/",
+    name="dashboard:all-promotion-task",
+    status_code=status.HTTP_200_OK,
+)
+async def get_promotion_tasks(
+    current_user=Security(get_current_user, scopes=["base"])
+):
+    """Gets all promotional tasks using key fields in User object
+
+    Args:
+        current_user - retrieved from login auth
+    Return:
+        HTTP_200_OK response with a list of all promotional tasks and their content
+    Raises:
+        HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
+    """
+    all_tasks = await PromotionTask.all()
+    target_tasks = await PromotionTask.filter(
+        stack=current_user.stack,
+        stage=current_user.stage,
+        track=current_user.track,
+        proficiency=current_user.proficiency,
+    )
+    # if not (general or all_announcements):
+    #     raise HTTPException(
+    #         detail="Failed to load all announcements",
+    #         status_code=status.HTTP_424_FAILED_DEPENDENCY,
+    #     )
+    if current_user.is_admin:
+        return all_tasks
+    return target_tasks
