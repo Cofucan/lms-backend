@@ -88,6 +88,7 @@ async def test_user():
             surname="User",
             email_verified=True,
             hashed_password=hashed_password,
+            is_admin=True,
         )
 
 
