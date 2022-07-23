@@ -1,5 +1,3 @@
-from pydoc import Doc
-import redis
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
