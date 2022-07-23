@@ -60,7 +60,7 @@ async def register(data: UserCreate):
     created_user = await User.create(
         **data.dict(exclude_unset=True, exclude={"password"}),
         hashed_password=hashed_password,
-        is_admin=True,
+        # is_admin=True,
     )
 
     # Printing the otp on the terminal.
@@ -70,12 +70,12 @@ async def register(data: UserCreate):
 
 
 @router.put(
-    "/set-permission/{user_id}",
+    "/set-permission/{email}",
     response_model=UserPublic,
     status_code=status.HTTP_200_OK,
 )
 async def set_permission(
-    user_id: str = Path(...),
+    email: str = Path(...),
     current_user=Security(get_current_user, scopes=["base", "root"]),
 ):
     """Set permission for a user
@@ -97,21 +97,21 @@ async def set_permission(
             detail="Only admins can set permission",
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
-    user = await User.get(id=user_id)
+    user = await User.get_or_none(email=email)
     if not user:
         raise HTTPException(
             detail="User not found", status_code=status.HTTP_404_NOT_FOUND
         )
     if user.is_admin:
-        user = await User.get(id=user.id).update(is_admin=False)
+        user_set = await User.get(id=user.id).update(is_admin=False)
     else:
-        user = await User.get(id=current_user.id).update(is_admin=True)
-    if not user:
+        user_set = await User.get(id=user.id).update(is_admin=True)
+    if not user_set:
         raise HTTPException(
             detail="Permission not set",
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
-    return user
+    return await User.get_or_none(email=email)
 
 
 @router.put(
@@ -228,7 +228,6 @@ async def forgot_password(data: ForgotPasswordSchema):
 
 @router.put(
     "/reset-password/{token}",
-    name="auth:reset-password",
     status_code=status.HTTP_200_OK,
 )
 async def password_reset(data: PasswordResetSchema, token: str = Path(...)):

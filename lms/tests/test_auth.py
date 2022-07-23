@@ -5,6 +5,11 @@ from httpx import AsyncClient
 from passlib.context import CryptContext
 
 from models.user import User
+from library.dependencies.test_data import (
+    generate_user,
+    generate_lesson,
+    generate_announcement,
+)
 
 
 pytestmark = pytest.mark.asyncio
@@ -186,3 +191,42 @@ class TestLogin:
         )
         assert response.status_code == 200
         assert response.json().get("message") == "Password reset successful"
+
+
+class TestPermission:
+    async def test_set_permission(
+        self, app: FastAPI, client: AsyncClient, test_user
+    ) -> None:
+
+        new_user = generate_user()
+
+        # Create user
+        response = await client.post(
+            app.url_path_for("auth:register"), json=new_user
+        )
+        assert response.status_code == 201
+        user = await User.get_or_none(email=new_user.get("email"))
+        assert not user.is_admin
+
+        # Login admin
+        admin_data = {
+            "email": test_user.email,
+            "password": "@123Qwerty",
+        }
+        response = await client.post(
+            app.url_path_for("auth:login"), json=admin_data
+        )
+        assert response.status_code == 200
+
+        admin_token = response.json().get("token")
+
+        # Make user an admin
+        response = await client.put(
+            app.url_path_for("set_permission", email=user.email),
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert response.status_code == 200
+        user = await User.get_or_none(email=new_user.get("email"))
+        assert user.is_admin
+
+
