@@ -22,7 +22,6 @@ router = APIRouter(prefix="/dashboard")
 
 @router.post(
     "/announcements/",
-    name="dashboard:announcement",
     response_model=AnnouncementResponse,
     status_code=status.HTTP_201_CREATED,
 )
@@ -80,23 +79,23 @@ async def get_announcements(
     Raises:
         HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
     """
+    if current_user.is_admin:
+        return await Announcement.all()
     general = await Announcement.filter(general="true")
-    all_announcements = await Announcement.all()
-    target_announcements = await Announcement.filter(
+    user_announcements = await Announcement.filter(
         stack=current_user.stack,
         stage=current_user.stage,
         track=current_user.track,
         proficiency=current_user.proficiency,
     )
-    # if not (general or all_announcements):
-    #     raise HTTPException(
-    #         detail="Failed to load all announcements",
-    #         status_code=status.HTTP_424_FAILED_DEPENDENCY,
-    #     )
-    if current_user.is_admin:
-        return all_announcements
-    target_announcements.append(general)
-    return target_announcements
+    try:
+        len(general)
+        return user_announcements.append(general)
+    except TypeError as e:
+        raise HTTPException(
+            detail="Failed to get all promotional tasks",
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+        ) from e
 
 
 @router.get(
@@ -314,21 +313,22 @@ async def get_lessons(
     Raises:
         HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
     """
-    all_lessons = await Lesson.all()
-    target_lessons = await Lesson.filter(
+    if current_user.is_admin:
+        return await Lesson.all()
+    user_lessons = await Lesson.filter(
         stack=current_user.stack,
         stage=current_user.stage,
         track=current_user.track,
         proficiency=current_user.proficiency,
     )
-    # if not (general or all_announcements):
-    #     raise HTTPException(
-    #         detail="Failed to load all announcements",
-    #         status_code=status.HTTP_424_FAILED_DEPENDENCY,
-    #     )
-    if current_user.is_admin:
-        return all_lessons
-    return target_lessons
+    try:
+        len(user_lessons)
+        return user_lessons
+    except TypeError as e:
+        raise HTTPException(
+            detail="Failed to get all lessons",
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+        ) from e
 
 
 @router.get(
@@ -348,18 +348,19 @@ async def get_promotion_tasks(
     Raises:
         HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
     """
-    all_tasks = await PromotionTask.all()
-    target_tasks = await PromotionTask.filter(
+    if current_user.is_admin:
+        return await PromotionTask.all()
+    user_tasks = await PromotionTask.filter(
         stack=current_user.stack,
         stage=current_user.stage,
         track=current_user.track,
         proficiency=current_user.proficiency,
     )
-    # if not (general or all_announcements):
-    #     raise HTTPException(
-    #         detail="Failed to load all announcements",
-    #         status_code=status.HTTP_424_FAILED_DEPENDENCY,
-    #     )
-    if current_user.is_admin:
-        return all_tasks
-    return target_tasks
+    try:
+        len(user_tasks)
+        return user_tasks
+    except TypeError as e:
+        raise HTTPException(
+            detail="Failed to get all promotional tasks",
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+        ) from e
