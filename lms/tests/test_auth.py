@@ -227,7 +227,6 @@ class TestPermission:
         )
         assert response.status_code == 200
         user = await User.get_or_none(email=new_user.get("email"))
-        # print(dict(user))
         assert user.is_admin
 
 
