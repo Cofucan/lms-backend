@@ -6,9 +6,9 @@ from passlib.context import CryptContext
 
 from models.user import User
 from library.dependencies.test_data import (
-    generate_user, 
-    generate_lesson, 
-    generate_announcement
+    generate_user,
+    generate_lesson,
+    generate_announcement,
 )
 
 
@@ -206,7 +206,7 @@ class TestPermission:
         )
         assert response.status_code == 201
         user = await User.get_or_none(email=new_user.get("email"))
-        assert user.is_admin is False
+        assert not user.is_admin
 
         # Login admin
         admin_data = {
@@ -217,20 +217,17 @@ class TestPermission:
             app.url_path_for("auth:login"), json=admin_data
         )
         assert response.status_code == 200
-        
+
+        admin_token = response.json().get("token")
+
         # Make user an admin
-        # current_user = await User.get(email=user.get("email"))
         response = await client.put(
-            app.url_path_for("set_permission", email=user.email) #, json=user
+            app.url_path_for("set_permission", email=user.email),
+            headers={"Authorization": f"Bearer {admin_token}"},
         )
         assert response.status_code == 200
+        user = await User.get_or_none(email=new_user.get("email"))
+        # print(dict(user))
+        assert user.is_admin
 
-        # # Login user
-        # request_data = {
-        #     "email": self.user.email,
-        #     "password": self.user.password,
-        # }
-        # response = await client.post(
-        #     app.url_path_for("auth:login"), json=request_data
-        # )
-        # assert response.status_code == 200
+
