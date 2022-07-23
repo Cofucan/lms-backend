@@ -3,6 +3,27 @@ import random
 
 gen = DocumentGenerator()
 
+stack = [
+    "backend",
+    "frontend",
+    "design",
+    "product management",
+    "cloud engineering",
+    "data science",
+]
+track = [
+    "nodejs",
+    "python",
+    "php",
+    "golang",
+    "vuejs",
+    "reactjs",
+    "vanillajs",
+    "product design",
+    "ui/ux design",
+]
+proficiency = ["beginner", "intermediate", "advanced"]
+
 
 def generate_user():
     template = {
@@ -19,26 +40,9 @@ def generate_announcement(general: bool):
     template_user = {
         "title": "name",
         "content": "sentence",
-        "stack": [
-            "backend",
-            "frontend",
-            "design",
-            "product management",
-            "cloud engineering",
-            "data science",
-        ],
-        "track": [
-            "nodejs",
-            "python",
-            "php",
-            "golang",
-            "vuejs",
-            "reactjs",
-            "vanillajs",
-            "product design",
-            "ui/ux design",
-        ],
-        "proficiency": ["beginner", "intermediate", "advanced"],
+        "stack": stack,
+        "track": track,
+        "proficiency": proficiency,
         "stage": random.randint(1, 20),
         "general": "false",
     }
@@ -58,26 +62,9 @@ def generate_lesson():
     template = {
         "title": "sentence",
         "content": "paragraph",
-        "stack": [
-            "backend",
-            "frontend",
-            "design",
-            "product management",
-            "cloud engineering",
-            "data science",
-        ],
-        "track": [
-            "nodejs",
-            "python",
-            "php",
-            "golang",
-            "vuejs",
-            "reactjs",
-            "vanillajs",
-            "product design",
-            "ui/ux design",
-        ],
-        "proficiency": ["beginner", "intermediate", "advanced"],
+        "stack": stack,
+        "track": track,
+        "proficiency": proficiency,
         "stage": random.randint(1, 20),
     }
     gen.set_template(template)
@@ -88,26 +75,9 @@ def generate_task():
     template = {
         "title": "sentence",
         "content": "paragraph",
-        "stack": [
-            "backend",
-            "frontend",
-            "design",
-            "product management",
-            "cloud engineering",
-            "data science",
-        ],
-        "track": [
-            "nodejs",
-            "python",
-            "php",
-            "golang",
-            "vuejs",
-            "reactjs",
-            "vanillajs",
-            "product design",
-            "ui/ux design",
-        ],
-        "proficiency": ["beginner", "intermediate", "advanced"],
+        "stack": stack,
+        "track": track,
+        "proficiency": proficiency,
         "stage": random.randint(1, 20),
         "feedback": "sentence",
         "active": "true",
