@@ -25,7 +25,6 @@ router = APIRouter(prefix="/dashboard")
 
 @router.post(
     "/announcements/",
-    name="dashboard:announcement",
     response_model=AnnouncementResponse,
     status_code=status.HTTP_201_CREATED,
 )
@@ -83,20 +82,23 @@ async def get_announcements(
     Raises:
         HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
     """
+    if current_user.is_admin:
+        return await Announcement.all()
     general = await Announcement.filter(general="true")
-    all_announcements = await Announcement.filter(
+    user_announcements = await Announcement.filter(
         stack=current_user.stack,
         stage=current_user.stage,
         track=current_user.track,
         proficiency=current_user.proficiency,
     )
-    if not (general or all_announcements):
+    try:
+        len(general)
+        return user_announcements.append(general)
+    except TypeError as e:
         raise HTTPException(
-            detail="Failed to load all announcements",
+            detail="Failed to get all promotional tasks",
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
-        )
-    all_announcements.append(general)
-    return all_announcements
+        ) from e
 
 
 @router.get(
@@ -177,7 +179,7 @@ async def create_lesson(
 
 @router.post(
     "/promotion-tasks/",
-    name="course:promotion-task",
+    name="dashboard:promotion-task",
     status_code=status.HTTP_201_CREATED,
     response_model=PromoTaskResponse,
     description="Create promotional task.",
@@ -295,4 +297,139 @@ async def profile_update(
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
     return {"message": "Profile successfully updated"}  
+   
 
+@router.get(
+    "/lessons/",
+    name="dashboard:all-lessons",
+    status_code=status.HTTP_200_OK,
+)
+async def get_lessons(
+    current_user=Security(get_current_user, scopes=["base"])
+):
+    """Gets all lessons using key fields in User object
+
+    Args:
+        current_user - retrieved from login auth
+    Return:
+        HTTP_200_OK response with a list of all related lessons and their content
+    Raises:
+        HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
+    """
+    if current_user.is_admin:
+        return await Lesson.all()
+    user_lessons = await Lesson.filter(
+        stack=current_user.stack,
+        stage=current_user.stage,
+        track=current_user.track,
+        proficiency=current_user.proficiency,
+    )
+    try:
+        len(user_lessons)
+        return user_lessons
+    except TypeError as e:
+        raise HTTPException(
+            detail="Failed to get all lessons",
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+        ) from e
+
+
+@router.get(
+    "/promotion-tasks/",
+    name="dashboard:all-promotion-task",
+    status_code=status.HTTP_200_OK,
+)
+async def get_promotion_tasks(
+    current_user=Security(get_current_user, scopes=["base"])
+):
+    """Gets all promotional tasks using key fields in User object
+
+    Args:
+        current_user - retrieved from login auth
+    Return:
+        HTTP_200_OK response with a list of all promotional tasks and their content
+    Raises:
+        HTTP_424_FAILED_DEPENDENCY if DB service fails retrieve objects
+    """
+    if current_user.is_admin:
+        return await PromotionTask.all()
+    user_tasks = await PromotionTask.filter(
+        stack=current_user.stack,
+        stage=current_user.stage,
+        track=current_user.track,
+        proficiency=current_user.proficiency,
+    )
+    try:
+        len(user_tasks)
+        return user_tasks
+    except TypeError as e:
+        raise HTTPException(
+            detail="Failed to get all promotional tasks",
+            status_code=status.HTTP_424_FAILED_DEPENDENCY,
+        ) from e
+
+
+@router.post(
+    "/submit-task/{promotional_task_id}/",
+    name="task:submit",
+    status_code=status.HTTP_201_CREATED,
+    response_model=TaskPublicSchema,
+    description="Submit a task."    
+)
+async def submit_task(
+    data:TaskSubmissionSchema,
+    promotional_task_id: str = Path(...),
+    current_user = Security(get_current_user, scopes=["base", "root"])
+):
+    """
+    Handles user task submissions,
+    
+    Args:
+        data - A pydantic schema that defines the task url to be submitted.
+        promotional_task_id - The promotional task id for which a task is to be submitted; a path parameter.
+        current_user - Retrieved from login path.   
+
+    Return:
+        HTTP_201_CREATED when a submission is made (created)     
+
+    Raise:
+        HTTP_422_UNPROCESSABLE_ENTITY when an invalid ID is not passed 
+        HTTP_404_NOT_FOUND when a valid ID format is passed but ID is not found
+        HTTP_409_CONFLICT when a task deadline has elapsed or when task is no longer active.
+    """
+    try:   
+        promotional_task = await PromotionTask.get_or_none(id=promotional_task_id) 
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid id format."
+        )    
+    if promotional_task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Promotional task not found"
+        )              
+
+    # check to know if promotional task  is still active
+    if str(promotional_task.deadline) < str(datetime.now()):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This Promotional task deadline has elapsed."
+        )
+
+    if promotional_task.active is False:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Promotional task is not active"
+        ) 
+
+    submission = await TaskSubmission.create(
+        user=current_user,
+        task=promotional_task, 
+        url=data.url,
+        submitted=True
+    )
+    return submission 
+
+
+   

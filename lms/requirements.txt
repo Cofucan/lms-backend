@@ -27,3 +27,6 @@ boto3==1.21.42
 
 # Numerical Computing
 numpy==1.22.3
+
+# Random data generation
+essential-generators==1.0

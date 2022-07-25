@@ -13,7 +13,7 @@ class AnnouncementCreate(BaseModel):
     title: str = Field(..., max_length=250, min_length=1)
     content: str = Field(..., max_length=654, min_length=1)
     general: bool
-    stage: int = Field(None, ge=0, le=20)
+    stage: Optional[int] = Field(None, ge=0, le=20)
     stack: Optional[Stack]
     track: Optional[Track]
     proficiency: Optional[Proficiency]
