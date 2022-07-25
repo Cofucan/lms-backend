@@ -1,4 +1,5 @@
 from models.user import User
+from models.dashboard import Lesson, PromotionTask, Resource, TaskSubmission
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, status, HTTPException, Security, Path
 from routers.auth import pwd_context
@@ -10,11 +11,13 @@ from library.schemas.dashboard import (
     PromoTaskResponse,
     ResourceCreate,
     ResourceResponse,
-    ProfileUpdateSchema,
+    ProfileUpdateSchema,    
     AnnouncementCreate as announce,
     AnnouncementResponse,
+    TaskSubmissionSchema,
+    TaskPublicSchema,
 )
-from models.dashboard import Lesson, PromotionTask, Resource, Announcement
+from models.dashboard import Lesson, PromotionTask, Resource, Announcement, TaskSubmission
 
 
 router = APIRouter(prefix="/dashboard")
@@ -293,8 +296,8 @@ async def profile_update(
             detail="Profile update unsuccessful",
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
-    return {"message": "Profile successfully updated"}
-
+    return {"message": "Profile successfully updated"}  
+   
 
 @router.get(
     "/lessons/",
@@ -364,3 +367,69 @@ async def get_promotion_tasks(
             detail="Failed to get all promotional tasks",
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         ) from e
+
+
+@router.post(
+    "/submit-task/{promotional_task_id}/",
+    name="task:submit",
+    status_code=status.HTTP_201_CREATED,
+    response_model=TaskPublicSchema,
+    description="Submit a task."    
+)
+async def submit_task(
+    data:TaskSubmissionSchema,
+    promotional_task_id: str = Path(...),
+    current_user = Security(get_current_user, scopes=["base", "root"])
+):
+    """
+    Handles user task submissions,
+    
+    Args:
+        data - A pydantic schema that defines the task url to be submitted.
+        promotional_task_id - The promotional task id for which a task is to be submitted; a path parameter.
+        current_user - Retrieved from login path.   
+
+    Return:
+        HTTP_201_CREATED when a submission is made (created)     
+
+    Raise:
+        HTTP_422_UNPROCESSABLE_ENTITY when an invalid ID is not passed 
+        HTTP_404_NOT_FOUND when a valid ID format is passed but ID is not found
+        HTTP_409_CONFLICT when a task deadline has elapsed or when task is no longer active.
+    """
+    try:   
+        promotional_task = await PromotionTask.get_or_none(id=promotional_task_id) 
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid id format."
+        )    
+    if promotional_task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Promotional task not found"
+        )              
+
+    # check to know if promotional task  is still active
+    if str(promotional_task.deadline) < str(datetime.now()):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This Promotional task deadline has elapsed."
+        )
+
+    if promotional_task.active is False:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Promotional task is not active"
+        ) 
+
+    submission = await TaskSubmission.create(
+        user=current_user,
+        task=promotional_task, 
+        url=data.url,
+        submitted=True
+    )
+    return submission 
+
+
+   
