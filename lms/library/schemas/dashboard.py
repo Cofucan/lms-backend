@@ -6,6 +6,7 @@ from library.dependencies.utils import regex, validate_stack_and_track
 from library.schemas.register import UserPublic
 from library.schemas.common import CommonBase, CommonResponse
 from library.schemas.enums import Stack, Track, Proficiency
+from library.schemas.shared import SharedModel
 
 
 class AnnouncementCreate(BaseModel):
@@ -120,7 +121,7 @@ class ResourceCreate(CommonBase):
 
 class ResourceResponse(BaseModel):
     creator: UserPublic
-    resources: ResourceSchema
+    resources: ResourceCreate
 
 
 class TaskSubmissionSchema(BaseModel):
@@ -132,4 +133,4 @@ class TaskPublicSchema(SharedModel):
     url: str
     graded: bool
     submitted: bool
-    resources: ResourceCreate
+    
