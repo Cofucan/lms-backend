@@ -18,7 +18,6 @@ class UserPublic(BaseModel):
     id: UUID
     first_name: str = Field(..., max_length=50)
     surname: str = Field(..., max_length=50)
-    email: EmailStr
     is_admin: bool
 
 

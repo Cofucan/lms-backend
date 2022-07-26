@@ -27,7 +27,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post(
     "/register/",
-    response_model=AuthResponse,
+    response_model=UserPublic,
     name="auth:register",
     status_code=status.HTTP_201_CREATED,
 )
@@ -60,13 +60,11 @@ async def register(data: UserCreate):
     created_user = await User.create(
         **data.dict(exclude_unset=True, exclude={"password"}),
         hashed_password=hashed_password,
-        # is_admin=True,
+        stage=0,
     )
-
-    # Printing the otp on the terminal.
     otp = otp_manager.create_otp(user_id=str(created_user.id))
-    # print(otp)
-    return AuthResponse(user=created_user, token=otp)
+    # pending - send otp as background task to registered email
+    return created_user
 
 
 @router.put(
@@ -118,7 +116,6 @@ async def set_permission(
     "/verify-email/{otp}",
     response_model=EmailVerify,
     status_code=status.HTTP_200_OK,
-    # name="auth:verify-email"
 )
 async def email_verification(otp: str = Path(...)):
     """Verifies email of a new user
@@ -145,9 +142,7 @@ async def email_verification(otp: str = Path(...)):
             "Email verification failed",
             status_code=status.HTTP_401_UNAUTHORIZED,
         )
-    # fetch  and return user after update the User.email_verified
-    user = await User.get(id=UUID(user_id))
-    return user
+    return "Email verification successful"
 
 
 @router.post(
@@ -171,10 +166,14 @@ async def login(data: LoginSchema):
 
     if user is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Your email or password is incorrect.",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User does not exist",
         )
-
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not verified",
+        )
     # Check password.
     hashed_password = user.hashed_password
     is_valid_password: bool = pwd_context.verify(
@@ -220,10 +219,8 @@ async def forgot_password(data: ForgotPasswordSchema):
     expire = datetime.now(timezone.utc) + timedelta(seconds=600)
     to_encode = {"user_id": str(user.id), "expire": str(expire)}
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return {
-        "message": f"Password reset link sent to {data.email}",
-        "token": encoded_jwt,
-    }
+    # pending - send jwt token to user email as a background task
+    return {"message": f"Password reset link sent to {data.email}"}
 
 
 @router.put(

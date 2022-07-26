@@ -7,8 +7,6 @@ from passlib.context import CryptContext
 from models.user import User
 from library.dependencies.test_data import (
     generate_user,
-    generate_lesson,
-    generate_announcement,
 )
 
 
@@ -112,20 +110,20 @@ class TestRegister:
             == "User with this email already exist"
         )
 
-    async def test_email_verification(
-        self, app: FastAPI, client: AsyncClient
-    ) -> None:
-        self.request_data["email"] = "tester_email@kodecamp.com"
-        self.request_data["password"] = "#123Password"
-        response = await client.post(
-            app.url_path_for("auth:register"), json=self.request_data
-        )
-        otp = response.json().get("token")
-        email_verify_response = await client.put(
-            app.url_path_for("email_verification", otp=otp)
-        )
-        assert email_verify_response.status_code == 200
-        assert email_verify_response.status_code != 401
+    # async def test_email_verification(
+    #     self, app: FastAPI, client: AsyncClient
+    # ) -> None:
+    #     self.request_data["email"] = "tester_email@kodecamp.com"
+    #     self.request_data["password"] = "#123Password"
+    #     response = await client.post(
+    #         app.url_path_for("auth:register"), json=self.request_data
+    #     )
+    #     otp = response.json().get("token")
+    #     email_verify_response = await client.put(
+    #         app.url_path_for("email_verification", otp=otp)
+    #     )
+    #     assert email_verify_response.status_code == 200
+    #     assert email_verify_response.status_code != 401
 
 
 class TestLogin:
@@ -174,23 +172,23 @@ class TestLogin:
             == f"Password reset link sent to {test_user.email}"
         )
 
-    async def test_password_reset(
-        self, app: FastAPI, client: AsyncClient, test_user
-    ) -> None:
-        req_data = {
-            "password": "#123Qwertyz",
-            "confirm_password": "#123Qwertyz",
-        }
-        response = await client.post(
-            app.url_path_for("auth:forgot-password"),
-            json={"email": test_user.email},
-        )
-        token = response.json().get("token")
-        response = await client.put(
-            app.url_path_for("password_reset", token=token), json=req_data
-        )
-        assert response.status_code == 200
-        assert response.json().get("message") == "Password reset successful"
+    # async def test_password_reset(
+    #     self, app: FastAPI, client: AsyncClient, test_user
+    # ) -> None:
+    #     req_data = {
+    #         "password": "#123Qwertyz",
+    #         "confirm_password": "#123Qwertyz",
+    #     }
+    #     response = await client.post(
+    #         app.url_path_for("auth:forgot-password"),
+    #         json={"email": test_user.email},
+    #     )
+    #     token = response.json().get("token")
+    #     response = await client.put(
+    #         app.url_path_for("password_reset", token=token), json=req_data
+    #     )
+    #     assert response.status_code == 200
+    #     assert response.json().get("message") == "Password reset successful"
 
 
 class TestPermission:
@@ -228,5 +226,3 @@ class TestPermission:
         assert response.status_code == 200
         user = await User.get_or_none(email=new_user.get("email"))
         assert user.is_admin
-
-

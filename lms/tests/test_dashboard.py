@@ -3,12 +3,9 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 from passlib.context import CryptContext
 
-from models.user import User
-
 from essential_generators import DocumentGenerator
 from library.dependencies.test_data import (
     generate_user,
-    generate_lesson,
     generate_announcement,
 )
 

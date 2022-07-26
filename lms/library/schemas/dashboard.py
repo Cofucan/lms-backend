@@ -1,19 +1,17 @@
 from typing import Optional
-from datetime import datetime
 from pydantic import BaseModel, Field, root_validator
 
 from library.dependencies.utils import regex, validate_stack_and_track
 from library.schemas.register import UserPublic
-from library.schemas.common import CommonBase, CommonResponse
+from library.schemas.common import CommonBase, CommonResponse, SharedModel
 from library.schemas.enums import Stack, Track, Proficiency
-from library.schemas.shared import SharedModel
 
 
 class AnnouncementCreate(BaseModel):
-    title: str = Field(..., max_length=250, min_length=1)
+    title: str = Field(..., max_length=254, min_length=1)
     content: str = Field(..., max_length=654, min_length=1)
     general: bool
-    stage: Optional[int] = Field(None, ge=0, le=20)
+    stage: Optional[int] = Field(None, ge=0, le=10)
     stack: Optional[Stack]
     track: Optional[Track]
     proficiency: Optional[Proficiency]
@@ -29,6 +27,8 @@ class AnnouncementCreate(BaseModel):
             raise ValueError(
                 "General cannot have a stack, stage, track or proficiency"
             )
+        if not general and not stack:
+            raise ValueError("General field cannot be false")
         return values
 
     @root_validator()
@@ -67,8 +67,6 @@ class LessonResponse(CommonResponse):
 
 
 class PromoTaskCreate(CommonBase):
-    active: bool
-    feedback: Optional[str] = None
     deadline: int = Field(..., ge=1, le=14)
 
     @root_validator()
@@ -76,19 +74,10 @@ class PromoTaskCreate(CommonBase):
         return validate_stack_and_track(values=values)
 
 
-class PromoTaskResponse(CommonResponse):
-    stack: str
-    track: str
-    proficiency: str
-    stage: int
-    active: bool
-    deadline: datetime
-
-
 class ProfileUpdateSchema(BaseModel):
-    first_name: Optional[str] = Field(None, max_length=60)
-    surname: Optional[str] = Field(None, max_length=60)
-    phone: Optional[str] = Field(None, max_length=15)
+    first_name: Optional[str] = Field(None, max_length=99)
+    surname: Optional[str] = Field(None, max_length=99)
+    phone: Optional[str] = Field(None, max_length=54)
     stack: Optional[Stack]
     track: Optional[Track]
     proficiency: Optional[Proficiency]
@@ -111,9 +100,6 @@ class ProfileUpdateSchema(BaseModel):
 
 
 class ResourceCreate(CommonBase):
-    url: str = Field(..., max_length=500)
-    filesize: Optional[str] = Field(max_length=100)
-
     @root_validator()
     def validate_input(cls, values):
         return validate_stack_and_track(values=values)
@@ -126,11 +112,11 @@ class ResourceResponse(BaseModel):
 
 class TaskSubmissionSchema(BaseModel):
     """Submit tasks"""
-    url: str = Field(..., max_length=500)
+
+    url: str = Field(..., max_length=499)
 
 
 class TaskPublicSchema(SharedModel):
     url: str
     graded: bool
     submitted: bool
-    

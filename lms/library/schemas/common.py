@@ -13,9 +13,9 @@ class CommonBase(BaseModel):
         Enum fields - stack: str, track: str, proficiency: str
     """
 
-    title: str = Field(..., max_length=250, min_length=1)
+    title: str = Field(..., max_length=127, min_length=1)
     content: str = Field(..., max_length=654, min_length=1)
-    stage: int = Field(..., ge=0, le=20)
+    stage: int = Field(..., ge=0, le=10)
     stack: Stack
     track: Track
     proficiency: Proficiency
@@ -32,3 +32,9 @@ class CommonResponse(BaseModel):
     title: str
     content: str
     created_at: datetime
+
+
+class SharedModel(BaseModel):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime

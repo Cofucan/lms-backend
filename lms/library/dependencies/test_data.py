@@ -10,6 +10,8 @@ stack = [
     "product management",
     "cloud engineering",
     "data science",
+    "mobile development",
+    "digital marketing",
 ]
 track = [
     "nodejs",
@@ -20,30 +22,31 @@ track = [
     "reactjs",
     "vanillajs",
     "product design",
-    "ui/ux design",
+    "graphic design",
 ]
 proficiency = ["beginner", "intermediate", "advanced"]
+stage = random.randint(0, 10)
 
 
 def generate_user():
-    template = {
+    template_user = {
         "first_name": "name",
         "surname": "name",
         "email": "email",
         "password": "bill#oJworl765d",
     }
-    gen.set_template(template)
+    gen.set_template(template_user)
     return gen.document()
 
 
 def generate_announcement(general: bool):
-    template_user = {
+    template = {
         "title": "name",
         "content": "sentence",
         "stack": stack,
         "track": track,
         "proficiency": proficiency,
-        "stage": random.randint(1, 20),
+        "stage": stage,
         "general": "false",
     }
     if general:
@@ -54,7 +57,7 @@ def generate_announcement(general: bool):
         }
         gen.set_template(template_general)
     else:
-        gen.set_template(template_user)
+        gen.set_template(template)
     return gen.document()
 
 
@@ -65,7 +68,7 @@ def generate_lesson():
         "stack": stack,
         "track": track,
         "proficiency": proficiency,
-        "stage": random.randint(1, 20),
+        "stage": stage,
     }
     gen.set_template(template)
     return gen.document()
@@ -78,7 +81,7 @@ def generate_task():
         "stack": stack,
         "track": track,
         "proficiency": proficiency,
-        "stage": random.randint(1, 20),
+        "stage": stage,
         "feedback": "sentence",
         "active": "true",
         "deadline": random.randint(1, 14),

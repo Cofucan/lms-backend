@@ -4,7 +4,7 @@ from enum import Enum
 class Stack(str, Enum):
     """Enum list of all the stacks
 
-    BE, FE, DESIGN, PM, CLOUD, and DS
+    BE, FE, DESIGN, PM, CLOUD, DS, MOBILE, DM
     """
 
     BE = "backend"
@@ -13,6 +13,8 @@ class Stack(str, Enum):
     PM = "product management"
     CLOUD = "cloud engineering"
     DS = "data science"
+    MOBILE = "mobile development"
+    DM = "digital marketing"
 
 
 class Track(str, Enum):
@@ -23,7 +25,7 @@ class Track(str, Enum):
     Frontend:
         FE_VUE, FE_REACT, FE_VANILLA
     Design:
-        PRODUCT_DESIGN, UIUX_DESIGN
+        PRODUCT_D, GRAPHIC_D
     """
 
     BE_NODE = "nodejs"
@@ -33,8 +35,8 @@ class Track(str, Enum):
     FE_VUE = "vuejs"
     FE_REACT = "reactjs"
     FE_VANILLA = "vanillajs"
-    PRODUCT_DESIGN = "product design"
-    UIUX_DESIGN = "ui/ux design"
+    PRODUCT_D = "product design"
+    GRAPHIC_D = "graphic design"
 
 
 class Proficiency(str, Enum):
