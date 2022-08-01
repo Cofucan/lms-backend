@@ -10,56 +10,53 @@ class Notification(BaseModel):
 
 
 class Announcement(BaseModel):
-    title = fields.CharField(max_length=255, null=True)
+    title = fields.CharField(max_length=128, null=True)
     content = fields.CharField(max_length=655, null=True)
     creator = fields.ForeignKeyField(
         "models.User", related_name="announcements", null=True
     )
     general = fields.BooleanField(default=False)
-    stack = fields.CharField(max_length=100, null=True)
-    track = fields.CharField(max_length=255, null=True)
+    stack = fields.CharField(max_length=55, null=True)
+    track = fields.CharField(max_length=55, null=True)
     proficiency = fields.CharField(max_length=100, null=True)
     stage = fields.IntField(null=True)
-
-
-class Stage(BaseModel):
-    stage = fields.IntField(null=True)
-    lesson = fields.ForeignKeyField(
-        "models.Lesson", related_name="stages", null=True
-    )
 
 
 class Lesson(BaseModel):
-    title = fields.CharField(max_length=255, null=True)
-    stack = fields.CharField(max_length=100, null=True)
-    track = fields.CharField(max_length=255, null=True)
-    proficiency = fields.CharField(max_length=100, null=True)
+    title = fields.CharField(max_length=128, null=True)
+    content = fields.CharField(max_length=655, null=True)
+    stack = fields.CharField(max_length=55, null=True)
+    track = fields.CharField(max_length=55, null=True)
+    proficiency = fields.CharField(max_length=55, null=True)
     stage = fields.IntField(null=True)
     creator = fields.ForeignKeyField(
         "models.User", related_name="lessons", null=True
     )
-    content = fields.CharField(max_length=655, null=True)
+    media = fields.ForeignKeyField(
+        "models.Media", related_name="lessons", null=True
+    )
 
 
 class Quiz(BaseModel):
-    stage = fields.ForeignKeyField(
-        "models.Stage", related_name="quizes", null=True
+    lesson = fields.ForeignKeyField(
+        "models.Lesson", related_name="quizes", null=True
     )
     user = fields.ForeignKeyField(
         "models.User", related_name="quizes", null=True
     )
     content = fields.CharField(max_length=655, null=True)
     deadline = fields.DatetimeField(auto_now=False, null=True)
+    score = fields.FloatField(default=0.0, null=True)
 
 
 class PromotionTask(BaseModel):
-    title = fields.CharField(max_length=255, null=True)
+    title = fields.CharField(max_length=128, null=True)
     content = fields.CharField(max_length=655, null=True)
-    stack = fields.CharField(max_length=100, null=True)
-    track = fields.CharField(max_length=255, null=True)
-    proficiency = fields.CharField(max_length=100, null=True)
+    stack = fields.CharField(max_length=55, null=True)
+    track = fields.CharField(max_length=55, null=True)
+    proficiency = fields.CharField(max_length=55, null=True)
     stage = fields.IntField(null=True)
-    feedback = fields.CharField(max_length=655, null=True)
+    feedback = fields.CharField(max_length=256, null=True)
     active = fields.BooleanField(default=False)
     deadline = fields.DatetimeField(auto_now=False, null=True)
     creator = fields.ForeignKeyField(
@@ -83,22 +80,28 @@ class TaskSubmission(BaseModel):
 class Resource(BaseModel):
     """Resources"""
 
-    title = fields.CharField(max_length=255, null=True)
+    title = fields.CharField(max_length=128, null=True)
+    content = fields.CharField(max_length=655, null=True)
+    stack = fields.CharField(max_length=55, null=True)
+    track = fields.CharField(max_length=55, null=True)
+    proficiency = fields.CharField(max_length=55, null=True)
+    stage = fields.IntField(null=True)
     creator = fields.ForeignKeyField(
         "models.User", related_name="resources", null=True
     )
-    content = fields.CharField(max_length=655, null=True)
-    url = fields.CharField(max_length=500, null=True)
-    filename = fields.CharField(max_length=200, null=True)
-    filesize = fields.CharField(max_length=100, null=True)
+    media = fields.ForeignKeyField(
+        "models.Media", related_name="resources", null=True
+    )
 
 
 class Media(BaseModel):
-    """Media contents"""
+    """Media contents
 
-    content = fields.ForeignKeyField(
-        "models.Lesson", related_name="media", null=True
-    )
+    Fields (All charfields):
+        title, url, filename, and filesize
+    """
+
+    title = fields.CharField(max_length=128, null=True)
     url = fields.CharField(max_length=500, null=True)
     filename = fields.CharField(max_length=200, null=True)
     filesize = fields.CharField(max_length=100, null=True)
