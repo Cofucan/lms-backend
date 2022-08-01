@@ -47,5 +47,15 @@ class TestAnnouncement:
         assert response.status_code == 201
 
 
-# Test unauthorized
-# Test user announcement
+
+"""
+Unit Test To-Dos
+- Test unauthorized accouncement creation
+- Test user announcement creation
+- Test multiple records in the database 100+ and assert data is all valid
+    * users
+    * announcements
+    * lessons
+    * promotional tasks
+    * notifications
+"""

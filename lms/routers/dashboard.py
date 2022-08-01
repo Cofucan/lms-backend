@@ -89,7 +89,7 @@ async def get_announcements(
         proficiency=current_user.proficiency,
     )
     try:
-        len(general)
+        len(general) # Successfull database call should always return a list
         return user_announcements.append(general)
     except TypeError as e:
         raise HTTPException(
@@ -322,7 +322,7 @@ async def get_lessons(
         proficiency=current_user.proficiency,
     )
     try:
-        len(user_lessons)
+        len(user_lessons) # Successfull database call should always return a list
         return user_lessons
     except TypeError as e:
         raise HTTPException(
