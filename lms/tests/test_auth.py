@@ -226,3 +226,21 @@ class TestPermission:
         assert response.status_code == 200
         user = await User.get_or_none(email=new_user.get("email"))
         assert user.is_admin
+
+
+# class TestLogout:
+#     async def test_logout(
+#         self, app: FastAPI, client: AsyncClient, test_user
+#     ) -> None:
+#         request_data = {
+#             "email": test_user.email,
+#             "password": "@123Qwerty",
+#         }
+#         response = await client.post(
+#             app.url_path_for("auth:logout"), json=request_data
+#         )
+#         assert response.status_code == 200
+#         res_data = response.json()
+
+#         assert "token" in res_data
+#         assert "user" in res_data

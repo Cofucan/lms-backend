@@ -281,3 +281,19 @@ async def password_reset(data: PasswordResetSchema, token: str = Path(...)):
             status_code=status.HTTP_424_FAILED_DEPENDENCY,
         )
     return {"message": "Password reset successful"}
+
+
+# @router.get(
+#     "/logout/",
+#     status_code=status.HTTP_200_OK,
+# )
+# async def logout(current_user=Security(get_current_user, scopes=["base"])):
+
+#     jwt_data = JWTSchema(user_id=str(current_user.id))
+#     to_encode = jwt_data.dict()
+#     expire = datetime.now()
+#     # expire = datetime.now(timezone.utc) - timedelta(days=1)
+#     to_encode.update({"expire": str(expire)})
+
+#     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+#     return AuthResponse(user=current_user, token=encoded_jwt)
